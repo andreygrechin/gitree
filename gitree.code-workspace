@@ -8,8 +8,15 @@
 		"cSpell.words": [
 			"briandowns",
 			"Errorf",
+			"Fatalf",
+			"Fprintf",
 			"gitree",
-			"speckit"
+			"gitstatus",
+			"GOPATH",
+			"inodes",
+			"Println",
+			"speckit",
+			"worktree"
 		]
 	}
 }
