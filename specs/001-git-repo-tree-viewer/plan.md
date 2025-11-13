@@ -197,6 +197,7 @@ go.sum
 **Approach**: Test-First Development (TDD) - Write tests before implementation for each component
 
 **Reference Documents**:
+
 - Data structures: `specs/001-git-repo-tree-viewer/data-model.md`
 - Library APIs: `specs/001-git-repo-tree-viewer/contracts/library-api.md`
 - CLI contract: `specs/001-git-repo-tree-viewer/contracts/cli-contract.md`
@@ -207,6 +208,7 @@ go.sum
 **Objective**: Initialize Go module and install required dependencies
 
 **Tasks**:
+
 1. Initialize Go module: `go mod init github.com/user/gitree`
 2. Add dependencies per `research.md:545-557`:
    - `go get github.com/go-git/go-git/v5@v5.16.3`
@@ -255,11 +257,13 @@ go.sum
    - Add ScanResult.HasErrors() and SuccessRate() per `data-model.md:292-309`
 
 **Verification**:
+
 - All tests pass
 - Test coverage >80% for models package
 - Format examples match `cli-contract.md:73-83`
 
 **Cross-Reference Check**:
+
 - Repository.Validate() enforces `data-model.md:27-32`
 - GitStatus.Format() produces output matching `cli-contract.md:59-83`
 - Invariants from `data-model.md:434-441` are maintained
@@ -304,6 +308,7 @@ go.sum
    - Add documentation comments
 
 **Verification**:
+
 - All tests pass
 - Test coverage >80% for scanner package
 - Correctly detects both regular and bare repos
@@ -311,6 +316,7 @@ go.sum
 - Unit test requirements from `library-api.md:145-155` satisfied
 
 **Cross-Reference Check**:
+
 - Symlink handling matches `spec.md:FR-022`
 - Bare repo detection matches `spec.md:FR-026`
 - Error handling matches `library-api.md:130-142`
@@ -365,12 +371,14 @@ go.sum
    - Optimize go-git API calls (cache repository references if needed)
 
 **Verification**:
+
 - All tests pass
 - Test coverage >80% for gitstatus package
 - All unit test requirements from `library-api.md:290-303` satisfied
 - Timeout handling works correctly per `spec.md:FR-024, FR-025`
 
 **Cross-Reference Check**:
+
 - Branch/detached detection matches `spec.md:FR-005, FR-006`
 - Ahead/behind matches `spec.md:FR-007, FR-008`
 - No remote indicator matches `spec.md:FR-023`
@@ -426,12 +434,14 @@ go.sum
    - Add edge case handling (nil status, empty tree)
 
 **Verification**:
+
 - All tests pass
 - Test coverage >80% for tree package
 - Output exactly matches `cli-contract.md` examples
 - All unit test requirements from `library-api.md:417-428` satisfied
 
 **Cross-Reference Check**:
+
 - Tree structure matches `spec.md:FR-004`
 - Inline status format matches `spec.md:FR-011`
 - ASCII style matches `cli-contract.md:54-72`
@@ -482,6 +492,7 @@ go.sum
    - Add documentation comments
 
 **Verification**:
+
 - Integration tests pass
 - Manual test: `go run cmd/gitree/main.go` in test directory works
 - Output matches `cli-contract.md` examples exactly
@@ -489,6 +500,7 @@ go.sum
 - Exit codes correct per `cli-contract.md:139-147`
 
 **Cross-Reference Check**:
+
 - No arguments required per `spec.md:FR-019, FR-021`
 - Progress indicator per `spec.md:FR-013, FR-014`
 - Output format matches `cli-contract.md:40-83`
@@ -524,12 +536,14 @@ go.sum
    - Include context (paths, operation details)
 
 **Verification**:
+
 - All edge case tests pass
 - Tool doesn't crash on any error scenario
 - Error indicators appear correctly in output
 - Non-fatal errors logged to stderr but don't prevent output
 
 **Cross-Reference Check**:
+
 - Graceful degradation per `spec.md:FR-015, FR-016`
 - Error indicators match `cli-contract.md:70-72`
 - Error messages match `cli-contract.md:119-137`
@@ -556,6 +570,7 @@ go.sum
    - Test on each platform if possible
 
 **Verification**:
+
 - Binary runs without Go installed (static linking check)
 - `gitree` command works from any directory
 - No runtime dependencies beyond system libraries
@@ -590,6 +605,7 @@ go.sum
    - Document actual performance characteristics
 
 **Verification**:
+
 - Benchmark tests show acceptable performance
 - Performance goals met on standard hardware
 - No significant memory leaks (verify with pprof)
@@ -619,6 +635,7 @@ go.sum
    - Verify spacing and indentation
 
 **Verification**:
+
 - Output matches all examples in `cli-contract.md`
 - Contract verification tests pass per `cli-contract.md:299-337`
 - Visual inspection confirms clean, readable output
@@ -652,6 +669,7 @@ go.sum
    - Pull request process
 
 **Verification**:
+
 - `go doc` shows helpful documentation
 - All examples in quickstart.md work correctly
 - Documentation is beginner-friendly
@@ -686,6 +704,7 @@ go.sum
    - Sign off on completion
 
 **Verification**:
+
 - All tests pass
 - All requirements verified
 - No known bugs or issues
@@ -714,6 +733,7 @@ go.sum
    - Publish to package manager (if applicable)
 
 **Verification**:
+
 - Version 1.0.0 tagged in git
 - Release notes accurate
 - Installation process documented and tested
@@ -723,6 +743,7 @@ go.sum
 ## Implementation Checklist
 
 **Phase 2: Core Implementation**
+
 - [ ] Step 1: Project setup and dependencies
 - [ ] Step 2: Models package (TDD)
 - [ ] Step 3: Scanner library (TDD)
@@ -733,6 +754,7 @@ go.sum
 - [ ] Step 8: Build and installation
 
 **Phase 3: Refinement**
+
 - [ ] Step 1: Performance optimization
 - [ ] Step 2: Output format verification
 - [ ] Step 3: Documentation completion
@@ -759,23 +781,27 @@ Upon completion of Phase 3, verify all success criteria from `spec.md:156-167`:
 ## Notes for Implementation
 
 **TDD Workflow**:
+
 1. Write failing test (red)
 2. Implement minimal code to pass (green)
 3. Refactor for quality (refactor)
 4. Repeat
 
 **Cross-Reference Usage**:
+
 - When implementing each component, actively reference the detail files
 - Line numbers in references help locate exact specifications
 - Verify implementation matches both API contracts and examples
 
 **Testing Strategy**:
+
 - Unit tests: Test each library in isolation
 - Integration tests: Test CLI end-to-end
 - Manual tests: Real-world directory structures
 - Performance tests: Benchmark critical paths
 
 **Constitutional Compliance**:
+
 - Library-First: Each library has independent utility ✅
 - CLI Interface: Text I/O, no GUI ✅
 - Test-First: TDD enforced throughout ✅
