@@ -18,17 +18,21 @@ gitree
 ## Input
 
 ### Standard Input (stdin)
+
 - Not used in version 1.0.0
 
 ### Command-Line Arguments
+
 - None in version 1.0.0
 
 ### Environment Variables
+
 - `PWD`: Current working directory (standard shell variable, determines scan starting point)
 - `HOME`: User home directory (used by Git for configuration)
 - `GIT_CONFIG_*`: Standard Git environment variables (if set, affects Git operations)
 
 ### File System
+
 - Requires read access to directories being scanned
 - Requires read access to `.git` directories for repository information
 - Current working directory is the starting point for the scan
@@ -41,7 +45,7 @@ gitree
 
 Format: ASCII tree structure with inline Git status
 
-```
+```text
 .
 ├── project1 [main ↑2 ↓1 *]
 ├── project2 [develop $ *]
@@ -52,13 +56,15 @@ Format: ASCII tree structure with inline Git status
 ```
 
 **Output Structure**:
+
 - First line: `.` (current directory indicator)
 - Subsequent lines: Tree structure with repositories
 - Each line format: `{tree-prefix}{repo-name} {git-status}`
-- Tree prefixes: `├── `, `└── `, `│   ` (standard tree command characters)
+- Tree prefixes: `├──`, `└──`, `│` (standard tree command characters)
 - Git status format: `[{branch} {indicators}]`
 
 **Git Status Indicators**:
+
 - Branch name: e.g., `main`, `develop`, `feature/foo`
 - `DETACHED`: Shown instead of branch name when HEAD is detached
 - `↑N`: N commits ahead of remote
@@ -71,6 +77,7 @@ Format: ASCII tree structure with inline Git status
 - `timeout`: Git operations exceeded timeout
 
 **Status Indicator Combinations** (examples):
+
 - `[main]`: Clean branch, in sync
 - `[main ↑2]`: 2 commits ahead
 - `[main ↓1]`: 1 commit behind
@@ -84,7 +91,7 @@ Format: ASCII tree structure with inline Git status
 
 #### Success Case - No Repositories Found
 
-```
+```text
 No Git repositories found
 ```
 
@@ -92,7 +99,7 @@ No Git repositories found
 
 #### Empty Directory Case
 
-```
+```text
 No Git repositories found
 ```
 
@@ -103,11 +110,13 @@ No Git repositories found
 #### Progress Indicator
 
 During scanning (shown while processing):
-```
+
+```text
 ⠋ Scanning repositories...
 ```
 
 **Progress Indicator Characteristics**:
+
 - Animated spinner (various Unicode spinner characters)
 - Message: "Scanning repositories..."
 - Shown immediately upon start (within 1 second)
@@ -117,21 +126,25 @@ During scanning (shown while processing):
 #### Error Messages
 
 **Permission Denied**:
-```
+
+```text
 Error: permission denied accessing directory: /path/to/dir
 ```
 
 **Invalid Git Repository**:
-```
+
+```text
 Warning: corrupted repository at /path/to/repo: {error-details}
 ```
 
 **General Errors**:
-```
+
+```text
 Error: {error-description}
 ```
 
 **Error Message Format**:
+
 - Prefix: `Error:` or `Warning:`
 - Description: Human-readable error message
 - Context: Relevant path or operation details
@@ -177,12 +190,14 @@ Error: {error-description}
 ### Example 1: Clean Repositories
 
 **Command**:
+
 ```bash
-$ gitree
+gitree
 ```
 
 **Output** (stdout):
-```
+
+```text
 .
 ├── backend [main]
 └── frontend [main]
@@ -193,12 +208,14 @@ $ gitree
 ### Example 2: Mixed Status
 
 **Command**:
+
 ```bash
-$ gitree
+gitree
 ```
 
 **Output** (stdout):
-```
+
+```text
 .
 ├── active-dev [feature/new-ui ↑3 *]
 ├── legacy [master ↓5]
@@ -210,12 +227,14 @@ $ gitree
 ### Example 3: Nested Repositories
 
 **Command**:
+
 ```bash
-$ gitree
+gitree
 ```
 
 **Output** (stdout):
-```
+
+```text
 .
 ├── monorepo [main]
 └── projects/
@@ -228,12 +247,14 @@ $ gitree
 ### Example 4: No Repositories
 
 **Command**:
+
 ```bash
-$ gitree
+gitree
 ```
 
 **Output** (stdout):
-```
+
+```text
 No Git repositories found
 ```
 
@@ -242,12 +263,14 @@ No Git repositories found
 ### Example 5: Bare Repository
 
 **Command**:
+
 ```bash
-$ gitree
+gitree
 ```
 
 **Output** (stdout):
-```
+
+```text
 .
 └── my-repo.git [main bare]
 ```
@@ -257,19 +280,22 @@ $ gitree
 ### Example 6: Error Cases
 
 **Command**:
+
 ```bash
-$ gitree
+gitree
 ```
 
 **Output** (stdout):
-```
+
+```text
 .
 ├── good-repo [main]
 └── broken-repo error
 ```
 
 **Output** (stderr):
-```
+
+```text
 Warning: corrupted repository at /path/to/broken-repo: unable to read HEAD
 ```
 
@@ -278,19 +304,22 @@ Warning: corrupted repository at /path/to/broken-repo: unable to read HEAD
 ### Example 7: Timeout Case
 
 **Command**:
+
 ```bash
-$ gitree
+gitree
 ```
 
 **Output** (stdout):
-```
+
+```text
 .
 ├── fast-repo [main]
 └── slow-repo [main] timeout
 ```
 
 **Output** (stderr):
-```
+
+```text
 Warning: timeout processing repository at /path/to/slow-repo
 ```
 
@@ -299,36 +328,42 @@ Warning: timeout processing repository at /path/to/slow-repo
 ## Contract Verification Tests
 
 ### Test 1: Output Format Validation
+
 ```bash
 # Verify output matches tree-like structure
 gitree | grep -E '^[├└│\s]+.*\[.*\]$'
 ```
 
 ### Test 2: Exit Code on Success
+
 ```bash
 gitree
 echo $?  # Must be 0
 ```
 
 ### Test 3: Stderr for Progress
+
 ```bash
 # Verify progress goes to stderr
 gitree 2>&1 >/dev/null | grep "Scanning"
 ```
 
 ### Test 4: Stdout Clean (no progress)
+
 ```bash
 # Verify stdout contains only tree output
 gitree 2>/dev/null | grep -v "Scanning"
 ```
 
 ### Test 5: No Repos Found
+
 ```bash
 cd /tmp/empty_dir
 gitree  # Should output "No Git repositories found"
 ```
 
 ### Test 6: Concurrent Processing Performance
+
 ```bash
 # Create 50 test repos
 for i in {1..50}; do git init test$i; done
@@ -340,6 +375,7 @@ time gitree  # Should complete in < 10 seconds
 **Version 1.0.0**: Initial release, no backward compatibility concerns
 
 **Future Versions**:
+
 - Text output format is part of the contract and will remain stable
 - Adding command-line flags will not break flag-less invocation
 - Exit codes will remain stable
@@ -348,14 +384,18 @@ time gitree  # Should complete in < 10 seconds
 ## Constitutional Compliance
 
 ### CLI Interface Principle
+
 ✅ **Compliance**:
+
 - Text input/output protocol followed
 - Output to stdout, errors to stderr
 - No GUI or interactive prompts
 - Unix-composable design
 
 ### Observability Principle
+
 ✅ **Compliance**:
+
 - Progress feedback via stderr
 - Error messages for failures
 - Status indicators for partial failures

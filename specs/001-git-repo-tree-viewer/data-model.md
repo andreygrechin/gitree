@@ -11,6 +11,7 @@
 Represents a Git repository discovered during directory scanning.
 
 **Fields**:
+
 - `Path` (string, required): Absolute file system path to the repository directory
 - `Name` (string, required): Base name of the repository directory (derived from Path)
 - `IsBare` (bool, required): Whether the repository is a bare repository (no working directory)
@@ -20,17 +21,20 @@ Represents a Git repository discovered during directory scanning.
 - `HasTimeout` (bool, required): Whether Git operations timed out for this repository
 
 **Relationships**:
+
 - Contains one GitStatus (optional, may be nil on error)
 - May be a child of a parent TreeNode
 - May have sibling repositories in the same directory
 
 **Validation Rules**:
+
 - Path MUST be non-empty and absolute
 - Name MUST be non-empty
 - If GitStatus is nil, Error or HasTimeout SHOULD be set
 - IsBare and GitStatus.HasChanges MUST NOT both be true (bare repos have no working directory)
 
 **Go Implementation**:
+
 ```go
 type Repository struct {
     Path       string
@@ -64,6 +68,7 @@ func (r *Repository) Validate() error {
 Represents the Git status information for a repository.
 
 **Fields**:
+
 - `Branch` (string, required): Current branch name or "DETACHED" if HEAD is detached
 - `IsDetached` (bool, required): Whether HEAD is in detached state
 - `HasRemote` (bool, required): Whether repository has a remote configured
@@ -74,12 +79,14 @@ Represents the Git status information for a repository.
 - `Error` (string, optional): Partial error message if some status info couldn't be retrieved
 
 **Validation Rules**:
+
 - Branch MUST be non-empty
 - If IsDetached is true, Branch MUST equal "DETACHED"
 - If HasRemote is false, Ahead and Behind MUST be 0
 - Ahead and Behind MUST be >= 0
 
 **State Transitions**:
+
 - Normal → Detached: When checking out a specific commit SHA
 - Detached → Normal: When checking out a branch
 - No changes → Has changes: When files are modified, added, or deleted
@@ -88,6 +95,7 @@ Represents the Git status information for a repository.
 - Has stashes → No stashes: When all stashes are applied or dropped
 
 **Go Implementation**:
+
 ```go
 type GitStatus struct {
     Branch     string
@@ -156,6 +164,7 @@ func (g *GitStatus) Format() string {
 ```
 
 **Format Examples**:
+
 - `[main]` - On main branch, in sync with remote, no changes
 - `[main ↑2 ↓1]` - 2 commits ahead, 1 behind
 - `[develop $ *]` - Has stashes and uncommitted changes
@@ -169,6 +178,7 @@ func (g *GitStatus) Format() string {
 Represents a node in the hierarchical tree structure used for formatting output.
 
 **Fields**:
+
 - `Repository` (*Repository, required): The repository at this tree node
 - `Depth` (int, required): Depth level in the tree (0 = root)
 - `IsLast` (bool, required): Whether this is the last child of its parent
@@ -176,23 +186,27 @@ Represents a node in the hierarchical tree structure used for formatting output.
 - `RelativePath` (string, required): Path relative to scan root, used for display
 
 **Relationships**:
+
 - Contains one Repository
 - May have multiple Children (TreeNode instances)
 - Has implicit parent relationship (not stored, inferred from tree structure)
 
 **Validation Rules**:
+
 - Repository MUST NOT be nil
 - Depth MUST be >= 0
 - RelativePath MUST be non-empty
 - Children ordering SHOULD be deterministic (alphabetically sorted)
 
 **Tree Properties**:
+
 - Root node has Depth = 0
 - Child nodes have Depth = parent.Depth + 1
 - Leaf nodes have len(Children) = 0
 - Last child of each parent has IsLast = true
 
 **Go Implementation**:
+
 ```go
 type TreeNode struct {
     Repository   *Repository
@@ -236,6 +250,7 @@ func (t *TreeNode) SortChildren() {
 Represents the complete result of a directory scan operation.
 
 **Fields**:
+
 - `RootPath` (string, required): Absolute path where scan started
 - `Repositories` ([]*Repository, required): All repositories found during scan
 - `Tree` (*TreeNode, required): Root node of the tree structure
@@ -245,6 +260,7 @@ Represents the complete result of a directory scan operation.
 - `Duration` (time.Duration, required): Time taken to complete scan
 
 **Validation Rules**:
+
 - RootPath MUST be non-empty and absolute
 - Repositories MUST NOT be nil (can be empty slice)
 - Tree MUST NOT be nil
@@ -253,6 +269,7 @@ Represents the complete result of a directory scan operation.
 - Duration MUST be >= 0
 
 **Go Implementation**:
+
 ```go
 type ScanResult struct {
     RootPath      string
@@ -311,7 +328,7 @@ func (s *ScanResult) SuccessRate() float64 {
 
 ## Entity Relationships Diagram
 
-```
+```text
 ┌─────────────────┐
 │   ScanResult    │
 └────────┬────────┘
@@ -337,6 +354,7 @@ func (s *ScanResult) SuccessRate() float64 {
 ```
 
 **Cardinality**:
+
 - ScanResult 1 : N Repository (one scan finds many repos)
 - ScanResult 1 : 1 TreeNode (one scan produces one tree root)
 - TreeNode 1 : 1 Repository (each node represents one repo)
