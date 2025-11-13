@@ -4,7 +4,7 @@
 *.dll
 *.so
 *.dylib
-gitree
+/gitree
 
 # Test binary, built with `go test -c`
 *.test

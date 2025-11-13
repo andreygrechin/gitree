@@ -113,11 +113,11 @@ func (g *GitStatus) Format() string {
 
 // TreeNode represents a node in the hierarchical tree structure.
 type TreeNode struct {
-	Repository   *Repository  // The repository at this tree node
-	Depth        int          // Depth level in the tree (0 = root)
-	IsLast       bool         // Whether this is the last child of its parent
-	Children     []*TreeNode  // Child nodes (nested repositories)
-	RelativePath string       // Path relative to scan root
+	Repository   *Repository // The repository at this tree node
+	Depth        int         // Depth level in the tree (0 = root)
+	IsLast       bool        // Whether this is the last child of its parent
+	Children     []*TreeNode // Child nodes (nested repositories)
+	RelativePath string      // Path relative to scan root
 }
 
 // Validate checks if the TreeNode meets all validation rules.
@@ -154,13 +154,13 @@ func (t *TreeNode) SortChildren() {
 
 // ScanResult represents the complete result of a directory scan operation.
 type ScanResult struct {
-	RootPath     string         // Absolute path where scan started
-	Repositories []*Repository  // All repositories found during scan
-	Tree         *TreeNode      // Root node of the tree structure
-	TotalScanned int            // Total number of directories scanned
-	TotalRepos   int            // Total number of Git repositories found
-	Errors       []error        // Collection of non-fatal errors
-	Duration     time.Duration  // Time taken to complete scan
+	RootPath     string        // Absolute path where scan started
+	Repositories []*Repository // All repositories found during scan
+	Tree         *TreeNode     // Root node of the tree structure
+	TotalScanned int           // Total number of directories scanned
+	TotalRepos   int           // Total number of Git repositories found
+	Errors       []error       // Collection of non-fatal errors
+	Duration     time.Duration // Time taken to complete scan
 }
 
 // Validate checks if the ScanResult meets all validation rules.
