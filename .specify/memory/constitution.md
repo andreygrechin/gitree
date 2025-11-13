@@ -1,50 +1,104 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+Sync Impact Report:
+- Version: 0.0.0 → 1.0.0
+- Modified principles: N/A (initial constitution)
+- Added sections:
+  * Core Principles (5 principles: Library-First, CLI Interface, Test-First, Observability, Simplicity)
+  * Development Standards (Code Quality, Documentation, Testing Standards)
+  * Governance (Amendment Process, Versioning Policy, Compliance, Runtime Guidance)
+- Removed sections: N/A
+- Templates requiring updates:
+  ✅ .specify/templates/plan-template.md (reviewed - constitution check section properly references constitution, complexity tracking aligns)
+  ✅ .specify/templates/spec-template.md (reviewed - requirements and success criteria align with principles)
+  ✅ .specify/templates/tasks-template.md (reviewed - task organization supports TDD principle, phase structure aligns)
+  ✅ .specify/templates/checklist-template.md (reviewed - generic template, no updates needed)
+  ✅ .specify/templates/agent-file-template.md (reviewed - generic template, no updates needed)
+- Follow-up TODOs: None
+- Version bump rationale: MAJOR version 1.0.0 as this is the initial ratification of the constitution, establishing the foundational governance structure and core principles for the Gitree project.
+-->
+
+# Gitree Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Library-First
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+Every feature MUST start as a standalone library. Libraries MUST be self-contained, independently testable, and documented with a clear purpose. Organizational-only libraries (libraries created solely for code organization without independent utility) are prohibited.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rationale**: Library-first architecture ensures modularity, reusability, and testability. Each library can be developed, tested, and maintained independently, reducing coupling and enabling better composition of functionality.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. CLI Interface
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+Every library MUST expose its functionality via a command-line interface. All CLI tools MUST follow the text in/out protocol: input from stdin or arguments, output to stdout, errors to stderr. Both JSON and human-readable formats MUST be supported for output.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Rationale**: CLI interfaces provide universal accessibility, scriptability, and composability. The text protocol ensures tools can be chained together using standard Unix conventions, enabling powerful workflows without complex integrations.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Test-First (NON-NEGOTIABLE)
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+Test-Driven Development is mandatory. Tests MUST be written before implementation. User approval of tests MUST be obtained before implementation begins. The Red-Green-Refactor cycle MUST be strictly enforced: write tests that fail, implement to make them pass, then refactor.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Rationale**: TDD ensures requirements are clearly understood before coding begins, produces better design through test-driven API thinking, provides immediate feedback, and creates comprehensive test coverage as a natural byproduct of development.
+
+### IV. Observability
+
+All CLI tools MUST ensure debuggability through their text I/O design. Structured logging MUST be implemented for all significant operations. Logs MUST be written to stderr to keep stdout clean for data output. Diagnostic information MUST be accessible without requiring special debugging tools.
+
+**Rationale**: Observability is not optional for production systems. Text-based protocols and structured logging enable developers and operators to understand system behavior, diagnose issues quickly, and maintain systems effectively over time.
+
+### V. Simplicity
+
+Start simple and apply YAGNI (You Aren't Gonna Need It) principles rigorously. Complexity MUST be justified against the Complexity Tracking table in implementation plans. Prefer straightforward solutions over clever abstractions. Add features only when there is demonstrated need.
+
+**Rationale**: Simplicity reduces cognitive load, minimizes bugs, accelerates development, and improves maintainability. Complex solutions are expensive to build, test, understand, and modify. Simple code is easier to reason about and more resilient to change.
+
+## Development Standards
+
+### Code Quality
+
+- All code MUST pass linting and formatting checks before commit
+- Code reviews MUST verify adherence to all constitutional principles
+- Breaking changes MUST follow semantic versioning (MAJOR.MINOR.PATCH)
+- Public APIs MUST maintain backward compatibility within major versions
+
+### Documentation
+
+- Every library MUST include a README with purpose, installation, usage examples, and API reference
+- CLI tools MUST provide `--help` output documenting all flags and arguments
+- Complex algorithms or business logic MUST include inline comments explaining the "why"
+- Breaking changes MUST be documented in CHANGELOG.md
+
+### Testing Standards
+
+- Unit tests MUST cover individual functions and edge cases
+- Integration tests MUST cover CLI contract compliance (input/output protocol)
+- Contract tests MUST validate interfaces between libraries
+- All tests MUST be automated and run in CI/CD pipelines
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### Amendment Process
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+This constitution supersedes all other development practices and guidelines. Amendments require:
+
+1. Written proposal documenting the change and rationale
+2. Review and approval from project maintainers
+3. Migration plan for existing code if applicable
+4. Update to constitution version following semantic versioning rules
+
+### Versioning Policy
+
+Constitution version follows semantic versioning:
+
+- **MAJOR**: Backward incompatible changes (removing/redefining principles)
+- **MINOR**: Additions (new principles or materially expanded guidance)
+- **PATCH**: Clarifications, wording improvements, non-semantic refinements
+
+### Compliance
+
+All pull requests and code reviews MUST verify compliance with constitutional principles. Violations MUST be documented in the Complexity Tracking section of implementation plans with explicit justification. Unjustified violations MUST be rejected.
+
+### Runtime Guidance
+
+For ongoing development guidance and agent-specific instructions, refer to `.specify/memory/agent-guidance.md` (if it exists). The constitution defines the immutable "what" and "why"; runtime guidance documents evolve the "how" based on project experience.
+
+**Version**: 1.0.0 | **Ratified**: 2025-11-13 | **Last Amended**: 2025-11-13

@@ -1,0 +1,13 @@
+---
+# Default state for all rules
+default: true
+
+no-inline-html:
+  allowed_elements:
+    - details
+    - summary
+
+line-length: false
+no-emphasis-as-heading: false
+first-line-heading: false
+no-duplicate-heading: false
