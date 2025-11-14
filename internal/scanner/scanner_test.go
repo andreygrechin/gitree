@@ -14,23 +14,23 @@ import (
 func createTestRepo(t *testing.T, path string, bare bool) {
 	t.Helper()
 
-	err := os.MkdirAll(path, 0755)
+	err := os.MkdirAll(path, 0o755)
 	require.NoError(t, err)
 
 	if bare {
 		// Create bare repository structure
-		err = os.MkdirAll(filepath.Join(path, "refs", "heads"), 0755)
+		err = os.MkdirAll(filepath.Join(path, "refs", "heads"), 0o755)
 		require.NoError(t, err)
-		err = os.MkdirAll(filepath.Join(path, "objects"), 0755)
+		err = os.MkdirAll(filepath.Join(path, "objects"), 0o755)
 		require.NoError(t, err)
-		err = os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0644)
+		err = os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0o644)
 		require.NoError(t, err)
 	} else {
 		// Create regular repository structure
 		gitDir := filepath.Join(path, ".git")
-		err = os.MkdirAll(gitDir, 0755)
+		err = os.MkdirAll(gitDir, 0o755)
 		require.NoError(t, err)
-		err = os.WriteFile(filepath.Join(gitDir, "HEAD"), []byte("ref: refs/heads/main\n"), 0644)
+		err = os.WriteFile(filepath.Join(gitDir, "HEAD"), []byte("ref: refs/heads/main\n"), 0o644)
 		require.NoError(t, err)
 	}
 }
@@ -79,7 +79,7 @@ func TestScan_FindsAllRepos(t *testing.T) {
 	createTestRepo(t, filepath.Join(tempDir, "subdir", "nested", "repo3"), false)
 
 	// Create non-repo directory
-	err := os.MkdirAll(filepath.Join(tempDir, "not-a-repo"), 0755)
+	err := os.MkdirAll(filepath.Join(tempDir, "not-a-repo"), 0o755)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -152,9 +152,9 @@ func TestScan_PermissionDeniedNonFatal(t *testing.T) {
 
 	// Create inaccessible directory
 	restrictedDir := filepath.Join(tempDir, "restricted")
-	err := os.MkdirAll(restrictedDir, 0000)
+	err := os.MkdirAll(restrictedDir, 0o000)
 	require.NoError(t, err)
-	defer os.Chmod(restrictedDir, 0755) // Cleanup
+	defer os.Chmod(restrictedDir, 0o755) // Cleanup
 
 	ctx := context.Background()
 	opts := ScanOptions{
@@ -310,8 +310,8 @@ func TestIsGitRepository_BareRepoPatterns(t *testing.T) {
 		{
 			name: "missing HEAD file",
 			setup: func(path string) {
-				os.MkdirAll(filepath.Join(path, "refs", "heads"), 0755)
-				os.MkdirAll(filepath.Join(path, "objects"), 0755)
+				os.MkdirAll(filepath.Join(path, "refs", "heads"), 0o755)
+				os.MkdirAll(filepath.Join(path, "objects"), 0o755)
 				// No HEAD file
 			},
 			wantRepo: false,
@@ -320,8 +320,8 @@ func TestIsGitRepository_BareRepoPatterns(t *testing.T) {
 		{
 			name: "missing refs directory",
 			setup: func(path string) {
-				os.MkdirAll(filepath.Join(path, "objects"), 0755)
-				os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0644)
+				os.MkdirAll(filepath.Join(path, "objects"), 0o755)
+				os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0o644)
 				// No refs directory
 			},
 			wantRepo: false,
@@ -330,8 +330,8 @@ func TestIsGitRepository_BareRepoPatterns(t *testing.T) {
 		{
 			name: "missing objects directory",
 			setup: func(path string) {
-				os.MkdirAll(filepath.Join(path, "refs", "heads"), 0755)
-				os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0644)
+				os.MkdirAll(filepath.Join(path, "refs", "heads"), 0o755)
+				os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0o644)
 				// No objects directory
 			},
 			wantRepo: false,
@@ -342,7 +342,7 @@ func TestIsGitRepository_BareRepoPatterns(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testPath := filepath.Join(tempDir, tt.name)
-			os.MkdirAll(testPath, 0755)
+			os.MkdirAll(testPath, 0o755)
 			tt.setup(testPath)
 
 			isRepo, isBare := IsGitRepository(testPath)

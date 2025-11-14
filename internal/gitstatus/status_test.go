@@ -34,7 +34,7 @@ func createTestRepoWithState(t *testing.T, state string) string {
 
 	// Create a test file
 	testFile := filepath.Join(tempDir, "test.txt")
-	err = os.WriteFile(testFile, []byte("initial content"), 0644)
+	err = os.WriteFile(testFile, []byte("initial content"), 0o644)
 	require.NoError(t, err)
 
 	_, err = worktree.Add("test.txt")
@@ -72,7 +72,7 @@ func createTestRepoWithState(t *testing.T, state string) string {
 
 	case "with-changes":
 		// Modify file to create uncommitted changes
-		err = os.WriteFile(testFile, []byte("modified content"), 0644)
+		err = os.WriteFile(testFile, []byte("modified content"), 0o644)
 		require.NoError(t, err)
 
 	case "with-stash":
@@ -102,7 +102,7 @@ func createTestRepoWithState(t *testing.T, state string) string {
 
 		// Create another commit to be ahead
 		testFile2 := filepath.Join(tempDir, "test2.txt")
-		err = os.WriteFile(testFile2, []byte("new file"), 0644)
+		err = os.WriteFile(testFile2, []byte("new file"), 0o644)
 		require.NoError(t, err)
 		_, err = worktree.Add("test2.txt")
 		require.NoError(t, err)
@@ -260,7 +260,7 @@ func TestExtract_HandlesCorruptedRepos(t *testing.T) {
 
 	// Create a fake .git directory without proper structure
 	gitDir := filepath.Join(tempDir, ".git")
-	err = os.Mkdir(gitDir, 0755)
+	err = os.Mkdir(gitDir, 0o755)
 	require.NoError(t, err)
 
 	ctx := context.Background()
