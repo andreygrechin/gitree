@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"sort"
@@ -19,20 +20,26 @@ type Repository struct {
 	HasTimeout bool       // Whether Git operations timed out
 }
 
+var (
+	errScanResultValidation = errors.New("scan result validation error")
+	errRepositoryValidation = errors.New("repository validation error")
+)
+
 // Validate checks if the Repository meets all validation rules.
 func (r *Repository) Validate() error {
 	if r.Path == "" {
-		return fmt.Errorf("path cannot be empty")
+		return fmt.Errorf("path cannot be empty: %w", errRepositoryValidation)
 	}
 	if !filepath.IsAbs(r.Path) {
-		return fmt.Errorf("path must be absolute: %s", r.Path)
+		return fmt.Errorf("path must be absolute: %w", errRepositoryValidation)
 	}
 	if r.Name == "" {
-		return fmt.Errorf("name cannot be empty")
+		return fmt.Errorf("name cannot be empty: %w", errRepositoryValidation)
 	}
 	if r.IsBare && r.GitStatus != nil && r.GitStatus.HasChanges {
-		return fmt.Errorf("bare repository cannot have uncommitted changes")
+		return fmt.Errorf("bare repository cannot have uncommitted changes: %w", errRepositoryValidation)
 	}
+
 	return nil
 }
 
@@ -48,20 +55,23 @@ type GitStatus struct {
 	Error      string // Partial error message if some status info couldn't be retrieved
 }
 
+var errGitStatusValidation = errors.New("git status validation error")
+
 // Validate checks if the GitStatus meets all validation rules.
 func (g *GitStatus) Validate() error {
 	if g.Branch == "" {
-		return fmt.Errorf("branch cannot be empty")
+		return fmt.Errorf("branch cannot be empty: %w", errGitStatusValidation)
 	}
 	if g.IsDetached && g.Branch != "DETACHED" {
-		return fmt.Errorf("detached HEAD must have branch = 'DETACHED'")
+		return fmt.Errorf("detached HEAD must have branch = 'DETACHED': %w", errGitStatusValidation)
 	}
 	if !g.HasRemote && (g.Ahead != 0 || g.Behind != 0) {
-		return fmt.Errorf("no remote but ahead/behind counts are non-zero")
+		return fmt.Errorf("no remote but ahead/behind counts are non-zero: %w", errGitStatusValidation)
 	}
 	if g.Ahead < 0 || g.Behind < 0 {
-		return fmt.Errorf("ahead/behind counts cannot be negative")
+		return fmt.Errorf("ahead/behind counts cannot be negative: %w", errGitStatusValidation)
 	}
+
 	return nil
 }
 
@@ -120,17 +130,20 @@ type TreeNode struct {
 	RelativePath string      // Path relative to scan root
 }
 
+var errTreeNodeValidation = errors.New("tree node validation error")
+
 // Validate checks if the TreeNode meets all validation rules.
 func (t *TreeNode) Validate() error {
 	if t.Repository == nil {
-		return fmt.Errorf("repository cannot be nil")
+		return fmt.Errorf("repository cannot be nil: %w", errTreeNodeValidation)
 	}
 	if t.Depth < 0 {
-		return fmt.Errorf("depth cannot be negative")
+		return fmt.Errorf("depth cannot be negative: %d: %w", t.Depth, errTreeNodeValidation)
 	}
 	if t.RelativePath == "" {
-		return fmt.Errorf("relative path cannot be empty")
+		return fmt.Errorf("relative path cannot be empty: %s: %w", t.Repository.Path, errTreeNodeValidation)
 	}
+
 	return nil
 }
 
@@ -166,26 +179,27 @@ type ScanResult struct {
 // Validate checks if the ScanResult meets all validation rules.
 func (s *ScanResult) Validate() error {
 	if s.RootPath == "" {
-		return fmt.Errorf("root path cannot be empty")
+		return fmt.Errorf("root path cannot be empty: %w", errScanResultValidation)
 	}
 	if !filepath.IsAbs(s.RootPath) {
-		return fmt.Errorf("root path must be absolute: %s", s.RootPath)
+		return fmt.Errorf("root path must be absolute: %s: %w", s.RootPath, errScanResultValidation)
 	}
 	if s.Repositories == nil {
-		return fmt.Errorf("repositories slice cannot be nil")
+		return fmt.Errorf("repositories slice cannot be nil: %w", errScanResultValidation)
 	}
 	if s.Tree == nil {
-		return fmt.Errorf("tree cannot be nil")
+		return fmt.Errorf("tree cannot be nil: %w", errScanResultValidation)
 	}
 	if s.TotalRepos != len(s.Repositories) {
-		return fmt.Errorf("total repos mismatch: %d != %d", s.TotalRepos, len(s.Repositories))
+		return fmt.Errorf("total repos mismatch: %d != %d: %w", s.TotalRepos, len(s.Repositories), errScanResultValidation)
 	}
 	if s.TotalScanned < s.TotalRepos {
-		return fmt.Errorf("total scanned < total repos: %d < %d", s.TotalScanned, s.TotalRepos)
+		return fmt.Errorf("total scanned < total repos: %d < %d: %w", s.TotalScanned, s.TotalRepos, errScanResultValidation)
 	}
 	if s.Duration < 0 {
-		return fmt.Errorf("duration cannot be negative")
+		return fmt.Errorf("duration cannot be negative: %w", errScanResultValidation)
 	}
+
 	return nil
 }
 

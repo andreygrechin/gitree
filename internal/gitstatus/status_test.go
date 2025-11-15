@@ -17,13 +17,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// createTestRepoWithState creates a test repository with specific Git state
+// createTestRepoWithState creates a test repository with specific Git state.
 func createTestRepoWithState(t *testing.T, state string) string {
 	t.Helper()
 
-	tempDir, err := os.MkdirTemp("", "gitree-gitstatus-test-*")
-	require.NoError(t, err)
-	t.Cleanup(func() { os.RemoveAll(tempDir) })
+	tempDir := t.TempDir()
 
 	repo, err := git.PlainInit(tempDir, false)
 	require.NoError(t, err)
@@ -34,7 +32,7 @@ func createTestRepoWithState(t *testing.T, state string) string {
 
 	// Create a test file
 	testFile := filepath.Join(tempDir, "test.txt")
-	err = os.WriteFile(testFile, []byte("initial content"), 0o644)
+	err = os.WriteFile(testFile, []byte("initial content"), 0o600)
 	require.NoError(t, err)
 
 	_, err = worktree.Add("test.txt")
@@ -72,7 +70,7 @@ func createTestRepoWithState(t *testing.T, state string) string {
 
 	case "with-changes":
 		// Modify file to create uncommitted changes
-		err = os.WriteFile(testFile, []byte("modified content"), 0o644)
+		err = os.WriteFile(testFile, []byte("modified content"), 0o600)
 		require.NoError(t, err)
 
 	case "with-stash":
@@ -102,7 +100,7 @@ func createTestRepoWithState(t *testing.T, state string) string {
 
 		// Create another commit to be ahead
 		testFile2 := filepath.Join(tempDir, "test2.txt")
-		err = os.WriteFile(testFile2, []byte("new file"), 0o644)
+		err = os.WriteFile(testFile2, []byte("new file"), 0o600)
 		require.NoError(t, err)
 		_, err = worktree.Add("test2.txt")
 		require.NoError(t, err)
@@ -112,16 +110,14 @@ func createTestRepoWithState(t *testing.T, state string) string {
 		require.NoError(t, err)
 
 		// Set remote tracking ref to first commit (so we're 1 ahead)
-		remoteBranchName := fmt.Sprintf("refs/remotes/origin/%s", branchName)
+		remoteBranchName := "refs/remotes/origin/" + branchName
 		remoteRef := plumbing.NewHashReference(plumbing.ReferenceName(remoteBranchName), firstCommitHash)
 		err = repo.Storer.SetReference(remoteRef)
 		require.NoError(t, err)
 
-	case "bare":
+	case "bare": //nolint:goconst // for clarity
 		// Close current repo and create bare repo
-		tempDirBare, err := os.MkdirTemp("", "gitree-bare-test-*")
-		require.NoError(t, err)
-		t.Cleanup(func() { os.RemoveAll(tempDirBare) })
+		tempDirBare := t.TempDir()
 
 		_, err = git.PlainInit(tempDirBare, true)
 		require.NoError(t, err)
@@ -132,7 +128,7 @@ func createTestRepoWithState(t *testing.T, state string) string {
 	return tempDir
 }
 
-// T032: Test helper to initialize test repos with known states
+// T032: Test helper to initialize test repos with known states.
 func TestCreateTestRepoHelper(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -160,7 +156,7 @@ func TestCreateTestRepoHelper(t *testing.T) {
 	}
 }
 
-// T033: Test Extract() getting branch name
+// T033: Test Extract() getting branch name.
 func TestExtract_GetsBranchName(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "basic")
 
@@ -174,7 +170,7 @@ func TestExtract_GetsBranchName(t *testing.T) {
 	assert.False(t, status.IsDetached)
 }
 
-// T034: Test Extract() detecting detached HEAD
+// T034: Test Extract() detecting detached HEAD.
 func TestExtract_DetectsDetachedHEAD(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "detached")
 
@@ -187,7 +183,7 @@ func TestExtract_DetectsDetachedHEAD(t *testing.T) {
 	assert.True(t, status.IsDetached)
 }
 
-// T035: Test Extract() calculating ahead/behind counts
+// T035: Test Extract() calculating ahead/behind counts.
 func TestExtract_CalculatesAheadBehindCounts(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "with-ahead")
 
@@ -201,7 +197,7 @@ func TestExtract_CalculatesAheadBehindCounts(t *testing.T) {
 	assert.True(t, status.HasRemote)
 }
 
-// T036: Test Extract() detecting no remote
+// T036: Test Extract() detecting no remote.
 func TestExtract_DetectsNoRemote(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "basic")
 
@@ -215,7 +211,7 @@ func TestExtract_DetectsNoRemote(t *testing.T) {
 	assert.Equal(t, 0, status.Behind)
 }
 
-// T037: Test Extract() detecting stashes
+// T037: Test Extract() detecting stashes.
 func TestExtract_DetectsStashes(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "with-stash")
 
@@ -227,7 +223,7 @@ func TestExtract_DetectsStashes(t *testing.T) {
 	assert.True(t, status.HasStashes)
 }
 
-// T038: Test Extract() detecting uncommitted changes
+// T038: Test Extract() detecting uncommitted changes.
 func TestExtract_DetectsUncommittedChanges(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "with-changes")
 
@@ -239,7 +235,7 @@ func TestExtract_DetectsUncommittedChanges(t *testing.T) {
 	assert.True(t, status.HasChanges)
 }
 
-// T039: Test Extract() handling bare repositories
+// T039: Test Extract() handling bare repositories.
 func TestExtract_HandlesBareRepositories(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "bare")
 
@@ -252,29 +248,27 @@ func TestExtract_HandlesBareRepositories(t *testing.T) {
 	// Bare repo may or may not have a branch depending on initialization
 }
 
-// T040: Test Extract() handling corrupted repos
+// T040: Test Extract() handling corrupted repos.
 func TestExtract_HandlesCorruptedRepos(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "gitree-corrupt-test-*")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	// Create a fake .git directory without proper structure
 	gitDir := filepath.Join(tempDir, ".git")
-	err = os.Mkdir(gitDir, 0o755)
+	err := os.Mkdir(gitDir, 0o750)
 	require.NoError(t, err)
 
 	ctx := context.Background()
 	status, err := Extract(ctx, tempDir, nil)
 
 	// Should return error for corrupted repo
-	assert.Error(t, err)
+	require.Error(t, err)
 	// Status may be nil or partial
 	if status != nil {
 		assert.NotEmpty(t, status.Error)
 	}
 }
 
-// T041: Test Extract() respecting context timeout
+// T041: Test Extract() respecting context timeout.
 func TestExtract_RespectsContextTimeout(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "basic")
 
@@ -288,18 +282,18 @@ func TestExtract_RespectsContextTimeout(t *testing.T) {
 	status, err := Extract(ctx, repoPath, nil)
 
 	// Should timeout
-	assert.Error(t, err)
+	require.Error(t, err)
 	// Status may be partial or nil
 	if status != nil {
 		assert.NotEmpty(t, status.Error)
 	}
 }
 
-// T042: Test ExtractBatch() concurrent processing
+// T042: Test ExtractBatch() concurrent processing.
 func TestExtractBatch_ConcurrentProcessing(t *testing.T) {
 	// Create multiple test repos
 	repos := make(map[string]*models.Repository)
-	for i := 0; i < 5; i++ {
+	for i := range 5 {
 		repoPath := createTestRepoWithState(t, "basic")
 		repoName := fmt.Sprintf("repo%d", i)
 		repos[repoPath] = &models.Repository{
@@ -334,7 +328,7 @@ func TestExtractBatch_ConcurrentProcessing(t *testing.T) {
 	assert.Less(t, duration, 5*time.Second, "should complete quickly with concurrency")
 }
 
-// Additional test: Extract with custom timeout option
+// Additional test: Extract with custom timeout option.
 func TestExtract_WithTimeoutOption(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "basic")
 
@@ -350,18 +344,18 @@ func TestExtract_WithTimeoutOption(t *testing.T) {
 	assert.Contains(t, []string{"main", "master"}, status.Branch)
 }
 
-// Additional test: Extract handles non-existent path
+// Additional test: Extract handles non-existent path.
 func TestExtract_NonExistentPath(t *testing.T) {
 	ctx := context.Background()
 	status, err := Extract(ctx, "/nonexistent/path", nil)
 
-	assert.Error(t, err)
+	require.Error(t, err)
 	if status != nil {
 		assert.NotEmpty(t, status.Error)
 	}
 }
 
-// Test ExtractBatch with empty repos map
+// Test ExtractBatch with empty repos map.
 func TestExtractBatch_EmptyRepos(t *testing.T) {
 	ctx := context.Background()
 	repos := make(map[string]*models.Repository)
@@ -372,11 +366,11 @@ func TestExtractBatch_EmptyRepos(t *testing.T) {
 	assert.Empty(t, statuses)
 }
 
-// Test ExtractBatch respects context cancellation
+// Test ExtractBatch respects context cancellation.
 func TestExtractBatch_RespectsContextCancellation(t *testing.T) {
 	// Create multiple test repos
 	repos := make(map[string]*models.Repository)
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		repoPath := createTestRepoWithState(t, "basic")
 		repos[repoPath] = &models.Repository{
 			Path: repoPath,

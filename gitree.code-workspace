@@ -12,10 +12,16 @@
 			"Fprintf",
 			"gitree",
 			"gitstatus",
+			"goconst",
+			"GOCOVERDIR",
 			"GOPATH",
+			"goreleaser",
 			"inodes",
+			"objs",
 			"Println",
 			"speckit",
+			"Storer",
+			"usetesting",
 			"worktree"
 		]
 	}

@@ -2,6 +2,7 @@ package gitstatus
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -12,7 +13,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
-// ExtractOptions configures the Git status extraction behavior
+// ExtractOptions configures the Git status extraction behavior.
 type ExtractOptions struct {
 	// Timeout is the maximum time to spend extracting status for a single repository
 	Timeout time.Duration
@@ -21,15 +22,20 @@ type ExtractOptions struct {
 	MaxConcurrency int
 }
 
-// DefaultOptions returns sensible default options
+const (
+	defaultExtractTimeout = 10 * time.Second
+	defaultMaxConcurrency = 10
+)
+
+// DefaultOptions returns sensible default options.
 func DefaultOptions() *ExtractOptions {
 	return &ExtractOptions{
-		Timeout:        10 * time.Second,
-		MaxConcurrency: 10,
+		Timeout:        defaultExtractTimeout,
+		MaxConcurrency: defaultMaxConcurrency,
 	}
 }
 
-// Extract retrieves Git status information for a single repository
+// Extract retrieves Git status information for a single repository.
 func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*models.GitStatus, error) {
 	if opts == nil {
 		opts = DefaultOptions()
@@ -50,6 +56,7 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*model
 		status, err := extractGitStatus(repoPath)
 		if err != nil {
 			errorChan <- err
+
 			return
 		}
 		resultChan <- status
@@ -65,6 +72,7 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*model
 			Branch: "unknown",
 			Error:  err.Error(),
 		}
+
 		return partialStatus, err
 	case <-ctx.Done():
 		// Timeout or cancellation
@@ -72,11 +80,12 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*model
 			Branch: "unknown",
 			Error:  "timeout",
 		}
+
 		return partialStatus, ctx.Err()
 	}
 }
 
-// extractGitStatus performs the actual Git status extraction
+// extractGitStatus performs the actual Git status extraction.
 func extractGitStatus(repoPath string) (*models.GitStatus, error) {
 	// Open repository
 	repo, err := git.PlainOpen(repoPath)
@@ -113,7 +122,7 @@ func extractGitStatus(repoPath string) (*models.GitStatus, error) {
 	// Check for uncommitted changes
 	if err := extractUncommittedChanges(repo, status); err != nil {
 		// Non-fatal for bare repos
-		if err != git.ErrIsBareRepository {
+		if !errors.Is(err, git.ErrIsBareRepository) {
 			if status.Error == "" {
 				status.Error = err.Error()
 			}
@@ -123,7 +132,7 @@ func extractGitStatus(repoPath string) (*models.GitStatus, error) {
 	return status, nil
 }
 
-// extractBranch extracts the current branch name and detached HEAD status
+// extractBranch extracts the current branch name and detached HEAD status.
 func extractBranch(repo *git.Repository, status *models.GitStatus) error {
 	head, err := repo.Head()
 	if err != nil {
@@ -141,7 +150,9 @@ func extractBranch(repo *git.Repository, status *models.GitStatus) error {
 	return nil
 }
 
-// extractRemote checks if the repository has a remote configured
+var errNoRemotes = errors.New("no remotes configured")
+
+// extractRemote checks if the repository has a remote configured.
 func extractRemote(repo *git.Repository, status *models.GitStatus) error {
 	remotes, err := repo.Remotes()
 	if err != nil {
@@ -150,14 +161,16 @@ func extractRemote(repo *git.Repository, status *models.GitStatus) error {
 
 	if len(remotes) > 0 {
 		status.HasRemote = true
+
 		return nil
 	}
 
 	status.HasRemote = false
-	return fmt.Errorf("no remotes configured")
+
+	return errNoRemotes
 }
 
-// extractAheadBehind calculates commits ahead and behind the remote tracking branch
+// extractAheadBehind calculates commits ahead and behind the remote tracking branch.
 func extractAheadBehind(repo *git.Repository, status *models.GitStatus) error {
 	// Get local HEAD
 	head, err := repo.Head()
@@ -174,7 +187,8 @@ func extractAheadBehind(repo *git.Repository, status *models.GitStatus) error {
 		// No remote tracking branch
 		status.Ahead = 0
 		status.Behind = 0
-		return nil
+
+		return err
 	}
 
 	// Count commits between local and remote
@@ -205,7 +219,7 @@ func extractAheadBehind(repo *git.Repository, status *models.GitStatus) error {
 	return nil
 }
 
-// countCommitsBetween counts commits from 'from' that are not in 'to'
+// countCommitsBetween counts commits from 'from' that are not in 'to'.
 func countCommitsBetween(repo *git.Repository, from, to *object.Commit) (int, error) {
 	// Get all commits reachable from 'to'
 	toCommits := make(map[plumbing.Hash]bool)
@@ -217,10 +231,11 @@ func countCommitsBetween(repo *git.Repository, from, to *object.Commit) (int, er
 
 	err = iter.ForEach(func(c *object.Commit) error {
 		toCommits[c.Hash] = true
+
 		return nil
 	})
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to iterate over commits: %w", err)
 	}
 
 	// Count commits reachable from 'from' that are not in 'to'
@@ -235,6 +250,7 @@ func countCommitsBetween(repo *git.Repository, from, to *object.Commit) (int, er
 		if !toCommits[c.Hash] {
 			count++
 		}
+
 		return nil
 	})
 	if err != nil {
@@ -244,7 +260,7 @@ func countCommitsBetween(repo *git.Repository, from, to *object.Commit) (int, er
 	return count, nil
 }
 
-// extractStashes checks if the repository has any stashed changes
+// extractStashes checks if the repository has any stashed changes.
 func extractStashes(repo *git.Repository) bool {
 	stashRef, err := repo.Reference("refs/stash", false)
 	if err != nil {
@@ -254,26 +270,30 @@ func extractStashes(repo *git.Repository) bool {
 	return stashRef != nil
 }
 
-// extractUncommittedChanges checks for uncommitted changes in the working tree
+// extractUncommittedChanges checks for uncommitted changes in the working tree.
 func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus) error {
 	worktree, err := repo.Worktree()
 	if err != nil {
 		// Likely a bare repository
 		status.HasChanges = false
+
 		return err
 	}
 
 	wtStatus, err := worktree.Status()
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to get worktree status: %w", err)
 	}
 
 	status.HasChanges = !wtStatus.IsClean()
+
 	return nil
 }
 
-// ExtractBatch extracts Git status for multiple repositories concurrently
-func ExtractBatch(ctx context.Context, repos map[string]*models.Repository, opts *ExtractOptions) (map[string]*models.GitStatus, error) {
+// ExtractBatch extracts Git status for multiple repositories concurrently.
+func ExtractBatch(
+	ctx context.Context, repos map[string]*models.Repository, opts *ExtractOptions) (map[string]*models.GitStatus, error,
+) {
 	if opts == nil {
 		opts = DefaultOptions()
 	}

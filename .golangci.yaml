@@ -1,0 +1,88 @@
+---
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+  concurrency: 4
+
+linters:
+  default: all
+  # enable:
+  #   - copyloopvar
+  #   - dupl
+  #   - errorlint
+  #   - gochecknoinits
+  #   - gocritic
+  #   - gosec
+  #   - govet
+  #   - ineffassign
+  #   - misspell
+  #   - nakedret
+  #   - nestif
+  #   - prealloc
+  #   - revive
+  #   - staticcheck
+  #   - testifylint
+  #   - unconvert
+  #   - unused
+  disable:
+    - wsl
+    - varnamelen
+    - funlen
+    - depguard
+    - wsl_v5
+    - noinlineerr
+    - exhaustruct
+    - cyclop
+    - testpackage
+    - wrapcheck
+    - nonamedreturns
+  settings:
+    lll:
+      line-length: 140
+    goconst:
+      min-len: 2
+      min-occurrences: 2
+    gocritic:
+      enabled-tags:
+        - performance
+        - style
+        - experimental
+    paralleltest:
+      ignore-missing: true
+      ignore-missing-subtests: true
+    tagliatelle:
+      case:
+        extended-rules:
+          json:
+            case: snake
+    misspell:
+      locale: US
+  exclusions:
+    generated: lax
+    warn-unused: false
+    rules:
+      - linters:
+          - revive
+        text: "package-comments: should have a package comment"
+      - linters:
+          - dupl
+          - gosec
+          - errcheck
+        path: _test\.go
+    paths:
+      - vendor
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofmt
+    - gofumpt
+    - goimports
+    # - golines
+  exclusions:
+    generated: lax
+    paths:
+      - vendor
+      - examples$

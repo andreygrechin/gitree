@@ -1,14 +1,13 @@
 package tree
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
 	"github.com/andreygrechin/gitree/internal/models"
 )
 
-// FormatOptions configures tree formatting behavior
+// FormatOptions configures tree formatting behavior.
 type FormatOptions struct {
 	// ShowRoot determines whether to show the root directory in output
 	ShowRoot bool
@@ -17,7 +16,7 @@ type FormatOptions struct {
 	RootLabel string
 }
 
-// DefaultFormatOptions returns sensible defaults
+// DefaultFormatOptions returns sensible defaults.
 func DefaultFormatOptions() *FormatOptions {
 	return &FormatOptions{
 		ShowRoot:  true,
@@ -25,7 +24,7 @@ func DefaultFormatOptions() *FormatOptions {
 	}
 }
 
-// Build constructs a hierarchical tree structure from a flat list of repositories
+// Build constructs a hierarchical tree structure from a flat list of repositories.
 func Build(rootPath string, repos []*models.Repository, opts *FormatOptions) *models.TreeNode {
 	if opts == nil {
 		opts = DefaultFormatOptions()
@@ -65,15 +64,15 @@ func Build(rootPath string, repos []*models.Repository, opts *FormatOptions) *mo
 	return root
 }
 
-// insertIntoTree inserts a repository into the tree at the correct location
-func insertIntoTree(root *models.TreeNode, repo *models.Repository, relPath string, rootPath string) {
+// insertIntoTree inserts a repository into the tree at the correct location.
+func insertIntoTree(root *models.TreeNode, repo *models.Repository, relPath, rootPath string) {
 	parts := strings.Split(filepath.ToSlash(relPath), "/")
 
 	current := root
 	currentPath := rootPath
 
 	// Navigate/create intermediate directory nodes
-	for i := 0; i < len(parts)-1; i++ {
+	for i := range len(parts) - 1 {
 		part := parts[i]
 		currentPath = filepath.Join(currentPath, part)
 
@@ -83,6 +82,7 @@ func insertIntoTree(root *models.TreeNode, repo *models.Repository, relPath stri
 			if child.Repository.Name == part {
 				current = child
 				found = true
+
 				break
 			}
 		}
@@ -111,7 +111,7 @@ func insertIntoTree(root *models.TreeNode, repo *models.Repository, relPath stri
 	current.Children = append(current.Children, repoNode)
 }
 
-// sortTree recursively sorts all children alphabetically and sets depth/IsLast flags
+// sortTree recursively sorts all children alphabetically and sets depth/IsLast flags.
 func sortTree(node *models.TreeNode) {
 	if node == nil {
 		return
@@ -127,7 +127,7 @@ func sortTree(node *models.TreeNode) {
 	}
 }
 
-// Format generates ASCII tree output from a tree structure
+// Format generates ASCII tree output from a tree structure.
 func Format(root *models.TreeNode, opts *FormatOptions) string {
 	if opts == nil {
 		opts = DefaultFormatOptions()
@@ -142,14 +142,15 @@ func Format(root *models.TreeNode, opts *FormatOptions) string {
 	// If there are no children, return message
 	if len(root.Children) == 0 {
 		if opts.ShowRoot {
-			builder.WriteString(fmt.Sprintf("%s\n", opts.RootLabel))
+			builder.WriteString(opts.RootLabel + "\n")
 		}
+
 		return builder.String()
 	}
 
 	// Show root if requested
 	if opts.ShowRoot {
-		builder.WriteString(fmt.Sprintf("%s\n", opts.RootLabel))
+		builder.WriteString(opts.RootLabel + "\n")
 	}
 
 	// Format children
@@ -161,7 +162,7 @@ func Format(root *models.TreeNode, opts *FormatOptions) string {
 	return builder.String()
 }
 
-// formatNode recursively formats a tree node with appropriate connectors
+// formatNode recursively formats a tree node with appropriate connectors.
 func formatNode(builder *strings.Builder, node *models.TreeNode, prefix string, isLast bool) {
 	if node == nil || node.Repository == nil {
 		return

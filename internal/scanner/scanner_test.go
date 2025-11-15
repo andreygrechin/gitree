@@ -10,32 +10,32 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Helper function to create test repositories
+// Helper function to create test repositories.
 func createTestRepo(t *testing.T, path string, bare bool) {
 	t.Helper()
 
-	err := os.MkdirAll(path, 0o755)
+	err := os.MkdirAll(path, 0o750)
 	require.NoError(t, err)
 
 	if bare {
 		// Create bare repository structure
-		err = os.MkdirAll(filepath.Join(path, "refs", "heads"), 0o755)
+		err = os.MkdirAll(filepath.Join(path, "refs", "heads"), 0o750)
 		require.NoError(t, err)
-		err = os.MkdirAll(filepath.Join(path, "objects"), 0o755)
+		err = os.MkdirAll(filepath.Join(path, "objects"), 0o750)
 		require.NoError(t, err)
-		err = os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0o644)
+		err = os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0o600)
 		require.NoError(t, err)
 	} else {
 		// Create regular repository structure
 		gitDir := filepath.Join(path, ".git")
-		err = os.MkdirAll(gitDir, 0o755)
+		err = os.MkdirAll(gitDir, 0o750)
 		require.NoError(t, err)
-		err = os.WriteFile(filepath.Join(gitDir, "HEAD"), []byte("ref: refs/heads/main\n"), 0o644)
+		err = os.WriteFile(filepath.Join(gitDir, "HEAD"), []byte("ref: refs/heads/main\n"), 0o600)
 		require.NoError(t, err)
 	}
 }
 
-// T020: Test IsGitRepository() detecting regular repos with .git directory
+// T020: Test IsGitRepository() detecting regular repos with .git directory.
 func TestIsGitRepository_Regular(t *testing.T) {
 	tempDir := t.TempDir()
 	repoPath := filepath.Join(tempDir, "test-repo")
@@ -47,7 +47,7 @@ func TestIsGitRepository_Regular(t *testing.T) {
 	assert.False(t, isBare, "Should not be detected as bare")
 }
 
-// T021: Test IsGitRepository() detecting bare repos
+// T021: Test IsGitRepository() detecting bare repos.
 func TestIsGitRepository_Bare(t *testing.T) {
 	tempDir := t.TempDir()
 	bareRepoPath := filepath.Join(tempDir, "bare-repo.git")
@@ -59,7 +59,7 @@ func TestIsGitRepository_Bare(t *testing.T) {
 	assert.True(t, isBare, "Should be detected as bare")
 }
 
-// Test IsGitRepository() with non-repository directory
+// Test IsGitRepository() with non-repository directory.
 func TestIsGitRepository_NotARepo(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -69,7 +69,7 @@ func TestIsGitRepository_NotARepo(t *testing.T) {
 	assert.False(t, isBare, "Should not detect non-repository as bare")
 }
 
-// T022: Test Scan() finding all repos in test directory tree
+// T022: Test Scan() finding all repos in test directory tree.
 func TestScan_FindsAllRepos(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -79,7 +79,7 @@ func TestScan_FindsAllRepos(t *testing.T) {
 	createTestRepo(t, filepath.Join(tempDir, "subdir", "nested", "repo3"), false)
 
 	// Create non-repo directory
-	err := os.MkdirAll(filepath.Join(tempDir, "not-a-repo"), 0o755)
+	err := os.MkdirAll(filepath.Join(tempDir, "not-a-repo"), 0o750)
 	require.NoError(t, err)
 
 	ctx := context.Background()
@@ -89,11 +89,11 @@ func TestScan_FindsAllRepos(t *testing.T) {
 	result, err := Scan(ctx, opts)
 
 	require.NoError(t, err)
-	assert.Equal(t, 3, len(result.Repositories), "Should find exactly 3 repositories")
+	assert.Len(t, result.Repositories, 3, "Should find exactly 3 repositories")
 	assert.Equal(t, 3, result.TotalRepos)
 }
 
-// T023: Test skipping nested repo contents per spec FR-018
+// T023: Test skipping nested repo contents per spec FR-018.
 func TestScan_SkipsNestedRepoContents(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -118,7 +118,7 @@ func TestScan_SkipsNestedRepoContents(t *testing.T) {
 	require.NoError(t, err)
 	// Should find parent, but NOT nested or deep-nested
 	// Because once we find parent-repo with .git, we skip its contents (FR-018)
-	assert.Equal(t, 1, len(result.Repositories), "Should find only the parent repo, skip its contents")
+	assert.Len(t, result.Repositories, 1, "Should find only the parent repo, skip its contents")
 
 	// Verify the repo we found is the parent
 	assert.Equal(t, "parent-repo", filepath.Base(result.Repositories[0].Path))
@@ -139,7 +139,7 @@ func TestScan_SkipsNestedRepoContents(t *testing.T) {
 	assert.False(t, foundDeepNested, "Should not find repos inside nested repos")
 }
 
-// T024: Test permission denied error handling (non-fatal)
+// T024: Test permission denied error handling (non-fatal).
 func TestScan_PermissionDeniedNonFatal(t *testing.T) {
 	if os.Getuid() == 0 {
 		t.Skip("Skipping permission test when running as root")
@@ -154,7 +154,7 @@ func TestScan_PermissionDeniedNonFatal(t *testing.T) {
 	restrictedDir := filepath.Join(tempDir, "restricted")
 	err := os.MkdirAll(restrictedDir, 0o000)
 	require.NoError(t, err)
-	defer os.Chmod(restrictedDir, 0o755) // Cleanup
+	defer os.Chmod(restrictedDir, 0o600) // Cleanup
 
 	ctx := context.Background()
 	opts := ScanOptions{
@@ -169,19 +169,19 @@ func TestScan_PermissionDeniedNonFatal(t *testing.T) {
 	assert.GreaterOrEqual(t, len(result.Repositories), 1, "Should find accessible repos")
 
 	// Should have collected permission errors
-	assert.Greater(t, len(result.Errors), 0, "Should collect permission errors")
+	assert.NotEmpty(t, result.Errors, "Should collect permission errors")
 }
 
-// T025: Test context cancellation
+// T025: Test context cancellation.
 func TestScan_ContextCancellation(t *testing.T) {
 	tempDir := t.TempDir()
 
 	// Create multiple repos
-	for i := 0; i < 10; i++ {
+	for i := range 10 {
 		createTestRepo(t, filepath.Join(tempDir, "repo"+string(rune('0'+i))), false)
 	}
 
-	// Create context that's already cancelled
+	// Create context that's already canceled
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 
@@ -190,7 +190,7 @@ func TestScan_ContextCancellation(t *testing.T) {
 	}
 	result, err := Scan(ctx, opts)
 
-	// Should return context cancelled error or partial results
+	// Should return context canceled error or partial results
 	// Based on implementation, context cancellation might be checked periodically
 	if err != nil {
 		assert.ErrorIs(t, err, context.Canceled, "Should return context.Canceled error")
@@ -200,7 +200,7 @@ func TestScan_ContextCancellation(t *testing.T) {
 	}
 }
 
-// T026: Test helper is the createTestRepo function above
+// T026: Test helper is the createTestRepo function above.
 func TestCreateTestRepoHelper(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -220,7 +220,7 @@ func TestCreateTestRepoHelper(t *testing.T) {
 	assert.FileExists(t, filepath.Join(barePath, "HEAD"), "Should create HEAD file")
 }
 
-// Additional edge case: Empty directory
+// Additional edge case: Empty directory.
 func TestScan_EmptyDirectory(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -231,11 +231,11 @@ func TestScan_EmptyDirectory(t *testing.T) {
 	result, err := Scan(ctx, opts)
 
 	require.NoError(t, err)
-	assert.Equal(t, 0, len(result.Repositories), "Should find no repositories in empty directory")
+	assert.Empty(t, result.Repositories, "Should find no repositories in empty directory")
 	assert.Equal(t, 0, result.TotalRepos)
 }
 
-// Additional edge case: Symlink handling
+// Additional edge case: Symlink handling.
 func TestScan_SymlinkToRepo(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -276,7 +276,7 @@ func TestScan_SymlinkToRepo(t *testing.T) {
 	}
 }
 
-// Test Scan with non-existent root path (fatal error)
+// Test Scan with non-existent root path (fatal error).
 func TestScan_NonExistentRoot(t *testing.T) {
 	ctx := context.Background()
 	opts := ScanOptions{
@@ -285,11 +285,11 @@ func TestScan_NonExistentRoot(t *testing.T) {
 	result, err := Scan(ctx, opts)
 
 	// Should return fatal error for non-existent root
-	assert.Error(t, err, "Should return error for non-existent root path")
+	require.Error(t, err, "Should return error for non-existent root path")
 	assert.Nil(t, result, "Should not return result on fatal error")
 }
 
-// Test bare repository detection patterns
+// Test bare repository detection patterns.
 func TestIsGitRepository_BareRepoPatterns(t *testing.T) {
 	tempDir := t.TempDir()
 
@@ -310,8 +310,8 @@ func TestIsGitRepository_BareRepoPatterns(t *testing.T) {
 		{
 			name: "missing HEAD file",
 			setup: func(path string) {
-				os.MkdirAll(filepath.Join(path, "refs", "heads"), 0o755)
-				os.MkdirAll(filepath.Join(path, "objects"), 0o755)
+				os.MkdirAll(filepath.Join(path, "refs", "heads"), 0o750)
+				os.MkdirAll(filepath.Join(path, "objects"), 0o750)
 				// No HEAD file
 			},
 			wantRepo: false,
@@ -320,8 +320,8 @@ func TestIsGitRepository_BareRepoPatterns(t *testing.T) {
 		{
 			name: "missing refs directory",
 			setup: func(path string) {
-				os.MkdirAll(filepath.Join(path, "objects"), 0o755)
-				os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0o644)
+				os.MkdirAll(filepath.Join(path, "objects"), 0o750)
+				os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0o600)
 				// No refs directory
 			},
 			wantRepo: false,
@@ -330,8 +330,8 @@ func TestIsGitRepository_BareRepoPatterns(t *testing.T) {
 		{
 			name: "missing objects directory",
 			setup: func(path string) {
-				os.MkdirAll(filepath.Join(path, "refs", "heads"), 0o755)
-				os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0o644)
+				os.MkdirAll(filepath.Join(path, "refs", "heads"), 0o750)
+				os.WriteFile(filepath.Join(path, "HEAD"), []byte("ref: refs/heads/main\n"), 0o600)
 				// No objects directory
 			},
 			wantRepo: false,
@@ -342,7 +342,7 @@ func TestIsGitRepository_BareRepoPatterns(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			testPath := filepath.Join(tempDir, tt.name)
-			os.MkdirAll(testPath, 0o755)
+			os.MkdirAll(testPath, 0o750)
 			tt.setup(testPath)
 
 			isRepo, isBare := IsGitRepository(testPath)

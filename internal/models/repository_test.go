@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -9,7 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// T008: Test Repository struct validation
+var ErrFakeError = errors.New("fake error for testing")
+
+// T008: Test Repository struct validation.
 func TestRepositoryValidation(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -79,7 +82,7 @@ func TestRepositoryValidation(t *testing.T) {
 	}
 }
 
-// T009: Test GitStatus struct validation
+// T009: Test GitStatus struct validation.
 func TestGitStatusValidation(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -167,7 +170,7 @@ func TestGitStatusValidation(t *testing.T) {
 	}
 }
 
-// T010: Test TreeNode struct validation
+// T010: Test TreeNode struct validation.
 func TestTreeNodeValidation(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -236,7 +239,7 @@ func TestTreeNodeValidation(t *testing.T) {
 	}
 }
 
-// T010: Test TreeNode methods
+// T010: Test TreeNode methods.
 func TestTreeNodeMethods(t *testing.T) {
 	t.Run("AddChild sets depth correctly", func(t *testing.T) {
 		parent := &TreeNode{
@@ -311,7 +314,7 @@ func TestTreeNodeMethods(t *testing.T) {
 	})
 }
 
-// T011: Test ScanResult struct validation
+// T011: Test ScanResult struct validation.
 func TestScanResultValidation(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -463,11 +466,11 @@ func TestScanResultValidation(t *testing.T) {
 	}
 }
 
-// T011: Test ScanResult helper methods
+// T011: Test ScanResult helper methods.
 func TestScanResultMethods(t *testing.T) {
 	t.Run("HasErrors returns true when errors exist", func(t *testing.T) {
 		result := ScanResult{
-			Errors: []error{fmt.Errorf("test error")},
+			Errors: []error{fmt.Errorf("test error: %w", ErrFakeError)},
 		}
 		assert.True(t, result.HasErrors())
 	})
@@ -484,7 +487,7 @@ func TestScanResultMethods(t *testing.T) {
 			TotalRepos:   0,
 			Repositories: []*Repository{},
 		}
-		assert.Equal(t, 1.0, result.SuccessRate())
+		assert.InDelta(t, 1.0, result.SuccessRate(), 1e-9)
 	})
 
 	t.Run("SuccessRate with all successful repos", func(t *testing.T) {
@@ -496,7 +499,7 @@ func TestScanResultMethods(t *testing.T) {
 				{Path: "/home/user/p3", Name: "p3"},
 			},
 		}
-		assert.Equal(t, 1.0, result.SuccessRate())
+		assert.InDelta(t, 1.0, result.SuccessRate(), 1e-9)
 	})
 
 	t.Run("SuccessRate with some failed repos", func(t *testing.T) {
@@ -504,16 +507,16 @@ func TestScanResultMethods(t *testing.T) {
 			TotalRepos: 4,
 			Repositories: []*Repository{
 				{Path: "/home/user/p1", Name: "p1"},
-				{Path: "/home/user/p2", Name: "p2", Error: fmt.Errorf("error")},
+				{Path: "/home/user/p2", Name: "p2", Error: fmt.Errorf("error: %w", ErrFakeError)},
 				{Path: "/home/user/p3", Name: "p3", HasTimeout: true},
 				{Path: "/home/user/p4", Name: "p4"},
 			},
 		}
-		assert.Equal(t, 0.5, result.SuccessRate())
+		assert.InDelta(t, 0.5, result.SuccessRate(), 1e-9)
 	})
 }
 
-// T012: Test GitStatus.Format() method
+// T012: Test GitStatus.Format() method.
 func TestGitStatusFormat(t *testing.T) {
 	tests := []struct {
 		name     string
