@@ -41,5 +41,7 @@ bin/
 # Logs
 *.log
 
-# Temporary files
+# Temporary files and caches
 *.tmp
+.gocache/
+.cache/

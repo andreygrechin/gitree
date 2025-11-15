@@ -607,7 +607,7 @@ go.sum
 **Verification**:
 
 - Benchmark tests show acceptable performance
-- Performance goals met on standard hardware
+- Performance goals met on developer's machine
 - No significant memory leaks (verify with pprof)
 
 ---

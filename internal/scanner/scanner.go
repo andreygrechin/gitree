@@ -2,6 +2,7 @@ package scanner
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -12,7 +13,7 @@ import (
 	"github.com/andreygrechin/gitree/internal/models"
 )
 
-// ScanOptions configures the directory scanning behavior
+// ScanOptions configures the directory scanning behavior.
 type ScanOptions struct {
 	RootPath string // Root directory to start scanning from
 }
@@ -20,8 +21,8 @@ type ScanOptions struct {
 // IsGitRepository checks if a directory is a Git repository
 // Returns (isRepo, isBare) where:
 // - isRepo: true if directory contains a Git repository
-// - isBare: true if it's a bare repository
-func IsGitRepository(path string) (bool, bool) {
+// - isBare: true if it's a bare repository.
+func IsGitRepository(path string) (isRepo, isBare bool) {
 	// Check for regular repository (.git directory)
 	gitDir := filepath.Join(path, ".git")
 	if info, err := os.Stat(gitDir); err == nil && info.IsDir() {
@@ -56,33 +57,34 @@ func IsGitRepository(path string) (bool, bool) {
 	return false, false
 }
 
-// scanner holds state during directory traversal
+// scanner holds state during directory traversal.
 type scanner struct {
 	rootPath     string
 	repositories []*models.Repository
 	errors       []error
 	visited      map[uint64]bool // Track visited inodes to prevent symlink loops
 	dirCount     int
-	ctx          context.Context
 }
 
-// Scan recursively scans a directory tree for Git repositories
+var errScanResultValidation = errors.New("scan result validation error")
+
+// Scan recursively scans a directory tree for Git repositories.
 func Scan(ctx context.Context, opts ScanOptions) (*models.ScanResult, error) {
 	startTime := time.Now()
 
 	// Validate root path exists
 	info, err := os.Stat(opts.RootPath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot access root path: %w", err)
+		return nil, fmt.Errorf("cannot access root path: %w: %w", errScanResultValidation, err)
 	}
 	if !info.IsDir() {
-		return nil, fmt.Errorf("root path is not a directory: %s", opts.RootPath)
+		return nil, fmt.Errorf("root path %s is not a directory: %w", opts.RootPath, errScanResultValidation)
 	}
 
 	// Get absolute path
 	absPath, err := filepath.Abs(opts.RootPath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get absolute path: %w", err)
+		return nil, fmt.Errorf("cannot get absolute path: %w: %w", errScanResultValidation, err)
 	}
 
 	s := &scanner{
@@ -90,12 +92,15 @@ func Scan(ctx context.Context, opts ScanOptions) (*models.ScanResult, error) {
 		repositories: make([]*models.Repository, 0),
 		errors:       make([]error, 0),
 		visited:      make(map[uint64]bool),
-		ctx:          ctx,
 	}
 
 	// Walk directory tree
-	err = filepath.WalkDir(absPath, s.walkFunc)
-	if err != nil && err != context.Canceled {
+	// Create closure to pass context to walkFunc
+	walkFn := func(path string, d fs.DirEntry, err error) error {
+		return s.walkFunc(ctx, path, d, err)
+	}
+	err = filepath.WalkDir(absPath, walkFn)
+	if err != nil && !errors.Is(err, context.Canceled) {
 		// If it's not a context cancellation, it's a fatal error
 		return nil, fmt.Errorf("error walking directory tree: %w", err)
 	}
@@ -116,21 +121,25 @@ func Scan(ctx context.Context, opts ScanOptions) (*models.ScanResult, error) {
 	return result, nil
 }
 
-// walkFunc is called for each file/directory during traversal
-func (s *scanner) walkFunc(path string, d fs.DirEntry, err error) error {
+var errPermissionDenied = errors.New("permission denied")
+
+// walkFunc is called for each file/directory during traversal.
+func (s *scanner) walkFunc(ctx context.Context, path string, d fs.DirEntry, err error) error {
 	// Check for context cancellation
 	select {
-	case <-s.ctx.Done():
-		return s.ctx.Err()
+	case <-ctx.Done():
+		return ctx.Err()
 	default:
 	}
 
 	// Handle permission errors (non-fatal)
 	if err != nil {
 		if os.IsPermission(err) {
-			s.errors = append(s.errors, fmt.Errorf("permission denied: %s", path))
+			s.errors = append(s.errors, fmt.Errorf("permission denied: %s: %w", path, errPermissionDenied))
+
 			return fs.SkipDir // Skip this directory but continue scanning
 		}
+
 		return err
 	}
 
@@ -145,6 +154,7 @@ func (s *scanner) walkFunc(path string, d fs.DirEntry, err error) error {
 	shouldVisit, isSymlink, err := s.shouldVisit(path)
 	if err != nil {
 		s.errors = append(s.errors, fmt.Errorf("error checking path %s: %w", path, err))
+
 		return fs.SkipDir
 	}
 	if !shouldVisit {
@@ -172,8 +182,8 @@ func (s *scanner) walkFunc(path string, d fs.DirEntry, err error) error {
 }
 
 // shouldVisit checks if a path should be visited (handles symlink loops)
-// Returns (shouldVisit, isSymlink, error)
-func (s *scanner) shouldVisit(path string) (bool, bool, error) {
+// Returns (shouldVisit, isSymlink, error).
+func (s *scanner) shouldVisit(path string) (shouldVisit, isSymlink bool, err error) {
 	// Get file info without following symlinks
 	info, err := os.Lstat(path)
 	if err != nil {
@@ -181,7 +191,7 @@ func (s *scanner) shouldVisit(path string) (bool, bool, error) {
 	}
 
 	// Check if it's a symlink
-	isSymlink := info.Mode()&os.ModeSymlink != 0
+	isSymlink = info.Mode()&os.ModeSymlink != 0
 	var actualPath string
 
 	if isSymlink {
@@ -189,7 +199,7 @@ func (s *scanner) shouldVisit(path string) (bool, bool, error) {
 		actualPath, err = filepath.EvalSymlinks(path)
 		if err != nil {
 			// Broken symlink
-			return false, false, fmt.Errorf("broken symlink: %w", err)
+			return false, false, err
 		}
 
 		// Get info of the target
@@ -202,8 +212,6 @@ func (s *scanner) shouldVisit(path string) (bool, bool, error) {
 		if !info.IsDir() {
 			return false, false, nil
 		}
-	} else {
-		actualPath = path
 	}
 
 	// Get inode to track visited paths
@@ -226,7 +234,7 @@ func (s *scanner) shouldVisit(path string) (bool, bool, error) {
 	return true, isSymlink, nil
 }
 
-// buildTree creates a TreeNode structure from flat repository list
+// buildTree creates a TreeNode structure from flat repository list.
 func (s *scanner) buildTree() *models.TreeNode {
 	if len(s.repositories) == 0 {
 		// No repositories found - create empty root node

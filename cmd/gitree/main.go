@@ -13,7 +13,16 @@ import (
 	"github.com/briandowns/spinner"
 )
 
+const (
+	defaultTimeout        = 10 * time.Second
+	maxConcurrentRequests = 10
+	spinnerDelay          = 100 * time.Millisecond
+	spinnerChar           = 11
+	defaultContextTimeout = 5 * time.Minute
+)
+
 func main() {
+	var exitCode int
 	// Get current working directory
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -22,14 +31,18 @@ func main() {
 	}
 
 	// Initialize spinner
-	s := spinner.New(spinner.CharSets[9], 100*time.Millisecond)
+
+	s := spinner.New(spinner.CharSets[spinnerChar], spinnerDelay)
 	s.Suffix = " Scanning repositories..."
 	s.Writer = os.Stderr
 	s.Start()
 
 	// Create context with timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
-	defer cancel()
+	ctx, cancel := context.WithTimeout(context.Background(), defaultContextTimeout)
+	defer func() {
+		cancel()
+		os.Exit(exitCode)
+	}()
 
 	// Scan for repositories
 	scanOpts := scanner.ScanOptions{
@@ -39,14 +52,18 @@ func main() {
 	if err != nil {
 		s.Stop()
 		fmt.Fprintf(os.Stderr, "Error: Failed to scan directory: %v\n", err)
-		os.Exit(1)
+		exitCode = 1
+
+		return
 	}
 
 	// Check if any repositories were found
 	if len(scanResult.Repositories) == 0 {
 		s.Stop()
-		fmt.Fprintln(os.Stdout, "No Git repositories found in this directory.")
-		os.Exit(0)
+		_, _ = fmt.Fprintln(os.Stdout, "No Git repositories found in this directory.")
+		exitCode = 0
+
+		return
 	}
 
 	// Update spinner message
@@ -60,8 +77,8 @@ func main() {
 
 	// Extract Git status concurrently
 	statusOpts := &gitstatus.ExtractOptions{
-		Timeout:        10 * time.Second,
-		MaxConcurrency: 10,
+		Timeout:        defaultTimeout,
+		MaxConcurrency: maxConcurrentRequests,
 	}
 	statuses, err := gitstatus.ExtractBatch(ctx, repoMap, statusOpts)
 	if err != nil {
@@ -85,8 +102,8 @@ func main() {
 
 	// Format and print tree
 	output := tree.Format(root, nil)
-	fmt.Fprint(os.Stdout, output)
+	_, _ = fmt.Fprint(os.Stdout, output)
 
 	// Exit successfully
-	os.Exit(0)
+	exitCode = 0
 }

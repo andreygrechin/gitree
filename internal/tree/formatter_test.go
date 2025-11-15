@@ -1,7 +1,7 @@
 package tree
 
 import (
-	"fmt"
+	"errors"
 	"strings"
 	"testing"
 
@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// T054: Test Build() creating correct tree structure from flat repo list
+// T054: Test Build() creating correct tree structure from flat repo list.
 func TestBuild_CreatesCorrectTreeStructure(t *testing.T) {
 	repos := []*models.Repository{
 		{Path: "/root/project1", Name: "project1"},
@@ -24,7 +24,7 @@ func TestBuild_CreatesCorrectTreeStructure(t *testing.T) {
 	assert.Len(t, root.Children, 3) // project1, project2, and nested directory
 }
 
-// T055: Test Build() calculating relative paths correctly
+// T055: Test Build() calculating relative paths correctly.
 func TestBuild_CalculatesRelativePaths(t *testing.T) {
 	repos := []*models.Repository{
 		{Path: "/root/project1", Name: "project1"},
@@ -42,7 +42,7 @@ func TestBuild_CalculatesRelativePaths(t *testing.T) {
 	assert.Contains(t, relPaths, "a/b/project2")
 }
 
-// Helper function to collect relative paths from tree
+// Helper function to collect relative paths from tree.
 func collectRelativePaths(node *models.TreeNode, paths *[]string) {
 	if node.Repository != nil {
 		*paths = append(*paths, node.RelativePath)
@@ -52,7 +52,7 @@ func collectRelativePaths(node *models.TreeNode, paths *[]string) {
 	}
 }
 
-// T056: Test Build() sorting children alphabetically
+// T056: Test Build() sorting children alphabetically.
 func TestBuild_SortsChildrenAlphabetically(t *testing.T) {
 	repos := []*models.Repository{
 		{Path: "/root/zebra", Name: "zebra"},
@@ -71,7 +71,7 @@ func TestBuild_SortsChildrenAlphabetically(t *testing.T) {
 	assert.Equal(t, "zebra", root.Children[2].Repository.Name)
 }
 
-// T057: Test Build() setting depth levels correctly
+// T057: Test Build() setting depth levels correctly.
 func TestBuild_SetsDepthLevels(t *testing.T) {
 	repos := []*models.Repository{
 		{Path: "/root/project1", Name: "project1"},
@@ -96,7 +96,7 @@ func TestBuild_SetsDepthLevels(t *testing.T) {
 	assert.Contains(t, depths, 2)
 }
 
-// Helper to collect all depths
+// Helper to collect all depths.
 func collectDepths(node *models.TreeNode, depths *[]int) {
 	*depths = append(*depths, node.Depth)
 	for _, child := range node.Children {
@@ -104,7 +104,7 @@ func collectDepths(node *models.TreeNode, depths *[]int) {
 	}
 }
 
-// T058: Test Build() marking IsLast flags for last children
+// T058: Test Build() marking IsLast flags for last children.
 func TestBuild_MarksIsLastFlags(t *testing.T) {
 	repos := []*models.Repository{
 		{Path: "/root/project1", Name: "project1"},
@@ -125,7 +125,7 @@ func TestBuild_MarksIsLastFlags(t *testing.T) {
 	assert.True(t, root.Children[2].IsLast)
 }
 
-// T059: Test Format() with single repository
+// T059: Test Format() with single repository.
 func TestFormat_SingleRepository(t *testing.T) {
 	repos := []*models.Repository{
 		{
@@ -146,7 +146,7 @@ func TestFormat_SingleRepository(t *testing.T) {
 	assert.Contains(t, output, "]")
 }
 
-// T060: Test Format() with multiple repos at same level
+// T060: Test Format() with multiple repos at same level.
 func TestFormat_MultipleReposSameLevel(t *testing.T) {
 	repos := []*models.Repository{
 		{
@@ -170,7 +170,7 @@ func TestFormat_MultipleReposSameLevel(t *testing.T) {
 	assert.Contains(t, output, "[develop")
 }
 
-// T061: Test Format() with nested repos
+// T061: Test Format() with nested repos.
 func TestFormat_NestedRepos(t *testing.T) {
 	repos := []*models.Repository{
 		{
@@ -193,7 +193,7 @@ func TestFormat_NestedRepos(t *testing.T) {
 	assert.Contains(t, output, "project2")
 }
 
-// T062: Test Format() using correct connectors
+// T062: Test Format() using correct connectors.
 func TestFormat_UsesCorrectConnectors(t *testing.T) {
 	repos := []*models.Repository{
 		{
@@ -216,7 +216,7 @@ func TestFormat_UsesCorrectConnectors(t *testing.T) {
 	assert.Contains(t, output, "└──") // Last child connector
 }
 
-// T063: Test Format() including Git status inline
+// T063: Test Format() including Git status inline.
 func TestFormat_IncludesGitStatusInline(t *testing.T) {
 	repos := []*models.Repository{
 		{
@@ -245,7 +245,7 @@ func TestFormat_IncludesGitStatusInline(t *testing.T) {
 	assert.Contains(t, output, "*")
 }
 
-// T064: Test Format() matching examples from cli-contract.md
+// T064: Test Format() matching examples from cli-contract.md.
 func TestFormat_MatchesCliContractExamples(t *testing.T) {
 	// Example: Simple tree with status
 	repos := []*models.Repository{
@@ -282,7 +282,7 @@ func TestFormat_MatchesCliContractExamples(t *testing.T) {
 	assert.Contains(t, output, "↑2") // Ahead indicator for proj2
 }
 
-// T065: Test Format() with empty repository list
+// T065: Test Format() with empty repository list.
 func TestFormat_EmptyRepositoryList(t *testing.T) {
 	repos := []*models.Repository{}
 
@@ -294,13 +294,15 @@ func TestFormat_EmptyRepositoryList(t *testing.T) {
 	// Typically would show root or "No repositories found" message
 }
 
-// Additional test: Format with error indicator
+var ErrCorruptedRepository = errors.New("corrupted repository")
+
+// Additional test: Format with error indicator.
 func TestFormat_WithErrorIndicator(t *testing.T) {
 	repos := []*models.Repository{
 		{
 			Path:  "/root/broken",
 			Name:  "broken",
-			Error: fmt.Errorf("corrupted repository"),
+			Error: ErrCorruptedRepository,
 			GitStatus: &models.GitStatus{
 				Branch: "main",
 				Error:  "corrupted",
@@ -315,7 +317,7 @@ func TestFormat_WithErrorIndicator(t *testing.T) {
 	assert.Contains(t, output, "error")
 }
 
-// Additional test: Format with timeout indicator
+// Additional test: Format with timeout indicator.
 func TestFormat_WithTimeoutIndicator(t *testing.T) {
 	repos := []*models.Repository{
 		{
@@ -336,7 +338,7 @@ func TestFormat_WithTimeoutIndicator(t *testing.T) {
 	assert.Contains(t, output, "timeout")
 }
 
-// Additional test: Format with bare repository
+// Additional test: Format with bare repository.
 func TestFormat_WithBareRepository(t *testing.T) {
 	repos := []*models.Repository{
 		{
@@ -356,13 +358,13 @@ func TestFormat_WithBareRepository(t *testing.T) {
 	assert.Contains(t, output, "bare")
 }
 
-// Test Build with nil repository list
+// Test Build with nil repository list.
 func TestBuild_NilRepositoryList(t *testing.T) {
 	root := Build("/root", nil, nil)
 	assert.NotNil(t, root)
 }
 
-// Test Format with vertical pipe for non-last children
+// Test Format with vertical pipe for non-last children.
 func TestFormat_VerticalPipeForNonLastChildren(t *testing.T) {
 	repos := []*models.Repository{
 		{
