@@ -116,7 +116,8 @@ func (g *GitStatus) Format() string {
 		if g.Behind > 0 {
 			parts = append(parts, redColor(fmt.Sprintf("↓%d", g.Behind)))
 		}
-	} else {
+	} else if g.Error == "" {
+		// Only show no-remote indicator if there's no error
 		parts = append(parts, grayColor("○"))
 	}
 
