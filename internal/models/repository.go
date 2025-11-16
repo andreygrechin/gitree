@@ -95,7 +95,7 @@ func (g *GitStatus) Validate() error {
 //   - [[ DETACHED ]] - Detached HEAD state
 //   - [[ main | ○ ]] - No remote configured
 //   - [[ main ]] error - Partial error retrieving status
-//   - [[ N/A | error ]] - Error retrieving status (N/A and error are red)
+//   - [[ N/A ]] error - Error retrieving status (N/A and error are red)
 func (g *GitStatus) Format() string {
 	var parts []string
 
