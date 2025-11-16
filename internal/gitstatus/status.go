@@ -10,6 +10,7 @@ import (
 	"github.com/andreygrechin/gitree/internal/models"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
@@ -278,6 +279,18 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus) e
 		status.HasChanges = false
 
 		return err
+	}
+
+	// Load global gitignore patterns to align with native git behavior
+	globalPatterns, err := gitignore.LoadGlobalPatterns(worktree.Filesystem)
+	if err == nil {
+		worktree.Excludes = append(worktree.Excludes, globalPatterns...)
+	}
+
+	// Load system gitignore patterns
+	systemPatterns, err := gitignore.LoadSystemPatterns(worktree.Filesystem)
+	if err == nil {
+		worktree.Excludes = append(worktree.Excludes, systemPatterns...)
 	}
 
 	wtStatus, err := worktree.Status()
