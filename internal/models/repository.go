@@ -100,11 +100,12 @@ func (g *GitStatus) Format() string {
 	var parts []string
 
 	// Branch: gray for main/master, red for N/A, yellow otherwise
-	if g.Branch == "main" || g.Branch == "master" {
+	switch g.Branch {
+	case "main", "master":
 		parts = append(parts, grayColor(g.Branch))
-	} else if g.Branch == "N/A" {
+	case "N/A":
 		parts = append(parts, redColor(g.Branch))
-	} else {
+	default:
 		parts = append(parts, yellowColor(g.Branch))
 	}
 
