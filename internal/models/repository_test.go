@@ -667,7 +667,7 @@ func TestGitStatusFormatDoubleBrackets(t *testing.T) {
 	assert.NotContains(t, output, "[main]", "Output should not contain old single bracket format")
 }
 
-// T010 [US1]: Verify bracket characters contain ANSI code \033[90m (gray) when colors enabled.
+// T010 [US1]: Verify bracket characters contain ANSI code \033[90;1m (bold gray) when colors enabled.
 func TestGitStatusFormatGrayBrackets(t *testing.T) {
 	color.NoColor = false // Enable colors
 	status := GitStatus{
@@ -676,8 +676,8 @@ func TestGitStatusFormatGrayBrackets(t *testing.T) {
 	}
 	output := status.Format()
 
-	// Gray color code is \033[90m (Hi-intensity black/gray)
-	assert.Contains(t, output, "\033[90m", "Output should contain ANSI gray color code")
+	// Bold gray color code is \033[90;1m (Hi-intensity black/gray with bold)
+	assert.Contains(t, output, "\033[90;1m", "Output should contain ANSI bold gray color code")
 	// Double brackets should be present
 	assert.Contains(t, output, "[[")
 	assert.Contains(t, output, "]]")

@@ -15,10 +15,10 @@ import (
 //
 //nolint:gochecknoglobals // These are immutable color functions, safe for concurrent use.
 var (
-	grayColor   = color.New(color.FgHiBlack).SprintFunc()
-	yellowColor = color.New(color.FgYellow).SprintFunc()
-	greenColor  = color.New(color.FgGreen).SprintFunc()
-	redColor    = color.New(color.FgRed).SprintFunc()
+	grayColor   = color.New(color.FgHiBlack, color.Bold).SprintFunc()
+	yellowColor = color.New(color.FgYellow, color.Bold).SprintFunc()
+	greenColor  = color.New(color.FgGreen, color.Bold).SprintFunc()
+	redColor    = color.New(color.FgRed, color.Bold).SprintFunc()
 )
 
 // Repository represents a Git repository discovered during directory scanning.
