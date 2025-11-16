@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -516,8 +517,12 @@ func TestScanResultMethods(t *testing.T) {
 	})
 }
 
-// T012: Test GitStatus.Format() method.
+// T012: Test GitStatus.Format() method (now with colorization and double brackets).
 func TestGitStatusFormat(t *testing.T) {
+	// Disable colors for these baseline tests to check structure
+	color.NoColor = true
+	defer func() { color.NoColor = false }()
+
 	tests := []struct {
 		name     string
 		status   GitStatus
@@ -529,7 +534,7 @@ func TestGitStatusFormat(t *testing.T) {
 				Branch:    "main",
 				HasRemote: true,
 			},
-			expected: "[main]",
+			expected: "[[ main ]]",
 		},
 		{
 			name: "ahead of remote",
@@ -538,7 +543,7 @@ func TestGitStatusFormat(t *testing.T) {
 				HasRemote: true,
 				Ahead:     2,
 			},
-			expected: "[main ↑2]",
+			expected: "[[ main | ↑2 ]]",
 		},
 		{
 			name: "behind remote",
@@ -547,7 +552,7 @@ func TestGitStatusFormat(t *testing.T) {
 				HasRemote: true,
 				Behind:    1,
 			},
-			expected: "[main ↓1]",
+			expected: "[[ main | ↓1 ]]",
 		},
 		{
 			name: "ahead and behind",
@@ -557,7 +562,7 @@ func TestGitStatusFormat(t *testing.T) {
 				Ahead:     2,
 				Behind:    1,
 			},
-			expected: "[main ↑2 ↓1]",
+			expected: "[[ main | ↑2 ↓1 ]]",
 		},
 		{
 			name: "with stashes",
@@ -566,7 +571,7 @@ func TestGitStatusFormat(t *testing.T) {
 				HasRemote:  true,
 				HasStashes: true,
 			},
-			expected: "[develop $]",
+			expected: "[[ develop | $ ]]",
 		},
 		{
 			name: "with uncommitted changes",
@@ -575,7 +580,7 @@ func TestGitStatusFormat(t *testing.T) {
 				HasRemote:  true,
 				HasChanges: true,
 			},
-			expected: "[main *]",
+			expected: "[[ main | * ]]",
 		},
 		{
 			name: "with stashes and changes",
@@ -585,7 +590,7 @@ func TestGitStatusFormat(t *testing.T) {
 				HasStashes: true,
 				HasChanges: true,
 			},
-			expected: "[develop $ *]",
+			expected: "[[ develop | $ * ]]",
 		},
 		{
 			name: "detached HEAD",
@@ -594,7 +599,7 @@ func TestGitStatusFormat(t *testing.T) {
 				IsDetached: true,
 				HasRemote:  false,
 			},
-			expected: "[DETACHED ○]",
+			expected: "[[ DETACHED | ○ ]]",
 		},
 		{
 			name: "no remote",
@@ -602,7 +607,7 @@ func TestGitStatusFormat(t *testing.T) {
 				Branch:    "main",
 				HasRemote: false,
 			},
-			expected: "[main ○]",
+			expected: "[[ main | ○ ]]",
 		},
 		{
 			name: "all indicators",
@@ -614,7 +619,7 @@ func TestGitStatusFormat(t *testing.T) {
 				HasStashes: true,
 				HasChanges: true,
 			},
-			expected: "[feature ↑3 ↓2 $ *]",
+			expected: "[[ feature | ↑3 ↓2 $ * ]]",
 		},
 		{
 			name: "with error",
@@ -623,7 +628,7 @@ func TestGitStatusFormat(t *testing.T) {
 				HasRemote: true,
 				Error:     "partial failure",
 			},
-			expected: "[main] error",
+			expected: "[[ main ]] error",
 		},
 		{
 			name: "with error and partial info",
@@ -634,7 +639,7 @@ func TestGitStatusFormat(t *testing.T) {
 				HasChanges: true,
 				Error:      "timeout",
 			},
-			expected: "[main ↑2 *] error",
+			expected: "[[ main | ↑2 * ]] error",
 		},
 	}
 
@@ -644,4 +649,54 @@ func TestGitStatusFormat(t *testing.T) {
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+// === User Story 1: Distinguish Repository Metadata from Names ===
+
+// T009 [US1]: Verify output uses double brackets [[ ]] instead of [ ].
+func TestGitStatusFormatDoubleBrackets(t *testing.T) {
+	color.NoColor = false // Enable colors
+	status := GitStatus{
+		Branch:    "main",
+		HasRemote: true,
+	}
+	output := status.Format()
+
+	assert.Contains(t, output, "[[", "Output should contain opening double bracket")
+	assert.Contains(t, output, "]]", "Output should contain closing double bracket")
+	assert.NotContains(t, output, "[main]", "Output should not contain old single bracket format")
+}
+
+// T010 [US1]: Verify bracket characters contain ANSI code \033[90m (gray) when colors enabled.
+func TestGitStatusFormatGrayBrackets(t *testing.T) {
+	color.NoColor = false // Enable colors
+	status := GitStatus{
+		Branch:    "main",
+		HasRemote: true,
+	}
+	output := status.Format()
+
+	// Gray color code is \033[90m (Hi-intensity black/gray)
+	assert.Contains(t, output, "\033[90m", "Output should contain ANSI gray color code")
+	// Double brackets should be present
+	assert.Contains(t, output, "[[")
+	assert.Contains(t, output, "]]")
+}
+
+// T011 [US1]: Verify [[ ]] present but no ANSI codes when color.NoColor = true.
+func TestGitStatusFormatDoubleBracketsNoColor(t *testing.T) {
+	color.NoColor = true                     // Disable colors
+	defer func() { color.NoColor = false }() // Restore after test
+
+	status := GitStatus{
+		Branch:    "main",
+		HasRemote: true,
+	}
+	output := status.Format()
+
+	// Double brackets should still be present
+	assert.Contains(t, output, "[[", "Output should contain double brackets even without color")
+	assert.Contains(t, output, "]]", "Output should contain double brackets even without color")
+	// No ANSI codes should be present
+	assert.NotContains(t, output, "\033[", "Output should not contain ANSI color codes when NoColor is true")
 }

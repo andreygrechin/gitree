@@ -127,3 +127,11 @@ make clean              # Remove build artifacts and caches
 - **Status display**: Symbols in git status: ○ (no remote), ↑ (ahead), ↓ (behind), $ (stashes), * (uncommitted)
 - **Tree building**: Converts flat repository list into hierarchy, creates intermediate directory nodes as needed
 - **Performance**: Spinner updates during long operations, concurrent git status extraction for speed
+
+## Active Technologies
+
+- Go 1.25.4 + fatih/color (already present via go-git dependencies) or golang.org/x/term for color suppor (002-colorized-status-output)
+
+## Recent Changes
+
+- 002-colorized-status-output: Added Go 1.25.4 + fatih/color (already present via go-git dependencies) or golang.org/x/term for color suppor
