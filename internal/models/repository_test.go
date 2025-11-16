@@ -628,7 +628,7 @@ func TestGitStatusFormat(t *testing.T) {
 				HasRemote: true,
 				Error:     "partial failure",
 			},
-			expected: "[[ main ]] error",
+			expected: "[[ main | error ]]",
 		},
 		{
 			name: "with error and partial info",
@@ -639,7 +639,15 @@ func TestGitStatusFormat(t *testing.T) {
 				HasChanges: true,
 				Error:      "timeout",
 			},
-			expected: "[[ main | ↑2 * ]] error",
+			expected: "[[ main | ↑2 * error ]]",
+		},
+		{
+			name: "with N/A branch and error",
+			status: GitStatus{
+				Branch: "N/A",
+				Error:  "failed to extract branch",
+			},
+			expected: "[[ N/A | error ]]",
 		},
 	}
 

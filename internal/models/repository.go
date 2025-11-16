@@ -94,8 +94,8 @@ func (g *GitStatus) Validate() error {
 //   - [[ develop | $ * ]] - Has stashes and uncommitted changes
 //   - [[ DETACHED ]] - Detached HEAD state
 //   - [[ main | ○ ]] - No remote configured
-//   - [[ main ]] error - Partial error retrieving status
-//   - [[ N/A ]] error - Error retrieving status (N/A and error are red)
+//   - [[ main | error ]] - Partial error retrieving status
+//   - [[ N/A | error ]] - Error retrieving status (N/A and error are red)
 func (g *GitStatus) Format() string {
 	var parts []string
 
@@ -130,6 +130,11 @@ func (g *GitStatus) Format() string {
 		parts = append(parts, redColor("*"))
 	}
 
+	// Error indicator: red (added as status indicator)
+	if g.Error != "" {
+		parts = append(parts, redColor("error"))
+	}
+
 	// Build result with double gray brackets and separator
 	var result string
 	if len(parts) == 1 {
@@ -140,11 +145,6 @@ func (g *GitStatus) Format() string {
 		separator := " " + grayColor("|") + " "
 		statusParts := strings.Join(parts[1:], " ")
 		result = grayColor("[[") + " " + parts[0] + separator + statusParts + " " + grayColor("]]")
-	}
-
-	// Append error indicator if present
-	if g.Error != "" {
-		result += " " + redColor("error")
 	}
 
 	return result

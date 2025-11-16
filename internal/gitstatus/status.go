@@ -98,6 +98,7 @@ func extractGitStatus(repoPath string) (*models.GitStatus, error) {
 
 	// Extract branch name and detached HEAD status
 	if err := extractBranch(repo, status); err != nil {
+		status.Branch = "N/A"
 		status.Error = err.Error()
 	}
 
