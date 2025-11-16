@@ -95,12 +95,15 @@ func (g *GitStatus) Validate() error {
 //   - [[ DETACHED ]] - Detached HEAD state
 //   - [[ main | ○ ]] - No remote configured
 //   - [[ main ]] error - Partial error retrieving status
+//   - [[ N/A | error ]] - Error retrieving status (N/A and error are red)
 func (g *GitStatus) Format() string {
 	var parts []string
 
-	// Branch: gray for main/master, yellow otherwise
+	// Branch: gray for main/master, red for N/A, yellow otherwise
 	if g.Branch == "main" || g.Branch == "master" {
 		parts = append(parts, grayColor(g.Branch))
+	} else if g.Branch == "N/A" {
+		parts = append(parts, redColor(g.Branch))
 	} else {
 		parts = append(parts, yellowColor(g.Branch))
 	}
@@ -141,7 +144,7 @@ func (g *GitStatus) Format() string {
 
 	// Append error indicator if present
 	if g.Error != "" {
-		result += " error"
+		result += " " + redColor("error")
 	}
 
 	return result
