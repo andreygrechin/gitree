@@ -142,8 +142,8 @@ func TestFormat_SingleRepository(t *testing.T) {
 	output := Format(root, nil)
 
 	assert.Contains(t, output, "project")
-	assert.Contains(t, output, "[main")
-	assert.Contains(t, output, "]")
+	assert.Contains(t, output, "[[ main")
+	assert.Contains(t, output, "]]")
 }
 
 // T060: Test Format() with multiple repos at same level.
@@ -166,8 +166,8 @@ func TestFormat_MultipleReposSameLevel(t *testing.T) {
 
 	assert.Contains(t, output, "project1")
 	assert.Contains(t, output, "project2")
-	assert.Contains(t, output, "[main")
-	assert.Contains(t, output, "[develop")
+	assert.Contains(t, output, "[[ main")
+	assert.Contains(t, output, "[[ develop")
 }
 
 // T061: Test Format() with nested repos.
@@ -238,7 +238,7 @@ func TestFormat_IncludesGitStatusInline(t *testing.T) {
 
 	// Check that status is formatted inline
 	assert.Contains(t, output, "project")
-	assert.Contains(t, output, "[main")
+	assert.Contains(t, output, "[[ main")
 	assert.Contains(t, output, "↑2")
 	assert.Contains(t, output, "↓1")
 	assert.Contains(t, output, "$")

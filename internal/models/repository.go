@@ -7,6 +7,18 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/fatih/color"
+)
+
+// Package-level color functions for status formatting.
+//
+//nolint:gochecknoglobals // These are immutable color functions, safe for concurrent use.
+var (
+	grayColor   = color.New(color.FgHiBlack).SprintFunc()
+	yellowColor = color.New(color.FgYellow).SprintFunc()
+	greenColor  = color.New(color.FgGreen).SprintFunc()
+	redColor    = color.New(color.FgRed).SprintFunc()
 )
 
 // Repository represents a Git repository discovered during directory scanning.
@@ -75,43 +87,57 @@ func (g *GitStatus) Validate() error {
 	return nil
 }
 
-// Format returns the formatted Git status string for display.
-// Examples:
-//   - [main] - On main, in sync with remote, no changes
-//   - [main ↑2 ↓1] - 2 commits ahead, 1 behind
-//   - [develop $ *] - Has stashes and uncommitted changes
-//   - [DETACHED] - Detached HEAD state
-//   - [main ○] - No remote configured
-//   - [main] error - Partial error retrieving status
+// Format returns the formatted Git status string for display with colorization.
+// Examples (with colors disabled):
+//   - [[ main ]] - On main, in sync with remote, no changes
+//   - [[ main | ↑2 ↓1 ]] - 2 commits ahead, 1 behind
+//   - [[ develop | $ * ]] - Has stashes and uncommitted changes
+//   - [[ DETACHED ]] - Detached HEAD state
+//   - [[ main | ○ ]] - No remote configured
+//   - [[ main ]] error - Partial error retrieving status
 func (g *GitStatus) Format() string {
 	var parts []string
 
-	// Branch or DETACHED
-	parts = append(parts, g.Branch)
+	// Branch: gray for main/master, yellow otherwise
+	if g.Branch == "main" || g.Branch == "master" {
+		parts = append(parts, grayColor(g.Branch))
+	} else {
+		parts = append(parts, yellowColor(g.Branch))
+	}
 
-	// Ahead/Behind or No Remote indicator
+	// Ahead/Behind: green/red, or gray no-remote indicator
 	if g.HasRemote {
 		if g.Ahead > 0 {
-			parts = append(parts, fmt.Sprintf("↑%d", g.Ahead))
+			parts = append(parts, greenColor(fmt.Sprintf("↑%d", g.Ahead)))
 		}
 		if g.Behind > 0 {
-			parts = append(parts, fmt.Sprintf("↓%d", g.Behind))
+			parts = append(parts, redColor(fmt.Sprintf("↓%d", g.Behind)))
 		}
 	} else {
-		parts = append(parts, "○")
+		parts = append(parts, grayColor("○"))
 	}
 
-	// Stashes
+	// Stashes: red
 	if g.HasStashes {
-		parts = append(parts, "$")
+		parts = append(parts, redColor("$"))
 	}
 
-	// Uncommitted changes
+	// Uncommitted changes: red
 	if g.HasChanges {
-		parts = append(parts, "*")
+		parts = append(parts, redColor("*"))
 	}
 
-	result := "[" + strings.Join(parts, " ") + "]"
+	// Build result with double gray brackets and separator
+	var result string
+	if len(parts) == 1 {
+		// Only branch, no separator needed
+		result = grayColor("[[") + " " + parts[0] + " " + grayColor("]]")
+	} else {
+		// Branch + status indicators, use separator
+		separator := " " + grayColor("|") + " "
+		statusParts := strings.Join(parts[1:], " ")
+		result = grayColor("[[") + " " + parts[0] + separator + statusParts + " " + grayColor("]]")
+	}
 
 	// Append error indicator if present
 	if g.Error != "" {
