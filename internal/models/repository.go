@@ -103,8 +103,10 @@ func (g *GitStatus) Format() string {
 	switch g.Branch {
 	case "main", "master":
 		parts = append(parts, grayColor(g.Branch))
-	default:
+	case "N/A":
 		parts = append(parts, redColor(g.Branch))
+	default:
+		parts = append(parts, yellowColor(g.Branch))
 	}
 
 	// Ahead/Behind: green/red, or gray no-remote indicator
