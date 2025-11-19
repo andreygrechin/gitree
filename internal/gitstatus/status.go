@@ -70,7 +70,7 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*model
 	case err := <-errorChan:
 		// Return partial status with error
 		partialStatus := &models.GitStatus{
-			Branch: "unknown",
+			Branch: "N/A",
 			Error:  err.Error(),
 		}
 
@@ -78,7 +78,7 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*model
 	case <-ctx.Done():
 		// Timeout or cancellation
 		partialStatus := &models.GitStatus{
-			Branch: "unknown",
+			Branch: "N/A",
 			Error:  "timeout",
 		}
 
@@ -98,6 +98,7 @@ func extractGitStatus(repoPath string) (*models.GitStatus, error) {
 
 	// Extract branch name and detached HEAD status
 	if err := extractBranch(repo, status); err != nil {
+		status.Branch = "N/A"
 		status.Error = err.Error()
 	}
 

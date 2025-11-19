@@ -94,14 +94,18 @@ func (g *GitStatus) Validate() error {
 //   - [[ develop | $ * ]] - Has stashes and uncommitted changes
 //   - [[ DETACHED ]] - Detached HEAD state
 //   - [[ main | ○ ]] - No remote configured
-//   - [[ main ]] error - Partial error retrieving status
+//   - [[ main | error ]] - Partial error retrieving status
+//   - [[ N/A | error ]] - Error retrieving status (N/A and error are red)
 func (g *GitStatus) Format() string {
 	var parts []string
 
-	// Branch: gray for main/master, yellow otherwise
-	if g.Branch == "main" || g.Branch == "master" {
+	// Branch: gray for main/master, red for N/A, yellow otherwise
+	switch g.Branch {
+	case "main", "master":
 		parts = append(parts, grayColor(g.Branch))
-	} else {
+	case "N/A":
+		parts = append(parts, redColor(g.Branch))
+	default:
 		parts = append(parts, yellowColor(g.Branch))
 	}
 
@@ -113,8 +117,9 @@ func (g *GitStatus) Format() string {
 		if g.Behind > 0 {
 			parts = append(parts, redColor(fmt.Sprintf("↓%d", g.Behind)))
 		}
-	} else {
-		parts = append(parts, grayColor("○"))
+	} else if g.Error == "" {
+		// Only show no-remote indicator if there's no error
+		parts = append(parts, yellowColor("○"))
 	}
 
 	// Stashes: red
@@ -127,6 +132,11 @@ func (g *GitStatus) Format() string {
 		parts = append(parts, redColor("*"))
 	}
 
+	// Error indicator: red (added as status indicator)
+	if g.Error != "" {
+		parts = append(parts, redColor("error"))
+	}
+
 	// Build result with double gray brackets and separator
 	var result string
 	if len(parts) == 1 {
@@ -137,11 +147,6 @@ func (g *GitStatus) Format() string {
 		separator := " " + grayColor("|") + " "
 		statusParts := strings.Join(parts[1:], " ")
 		result = grayColor("[[") + " " + parts[0] + separator + statusParts + " " + grayColor("]]")
-	}
-
-	// Append error indicator if present
-	if g.Error != "" {
-		result += " error"
 	}
 
 	return result
