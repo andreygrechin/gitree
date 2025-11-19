@@ -87,15 +87,32 @@ func (g *GitStatus) Validate() error {
 	return nil
 }
 
+// IsStandardStatus returns true if the repository is in a standard state:
+// - Branch is "main" or "master"
+// - Has remote configured
+// - No commits ahead or behind
+// - No stashes
+// - No uncommitted changes
+// - No errors
+func (g *GitStatus) IsStandardStatus() bool {
+	return (g.Branch == "main" || g.Branch == "master") &&
+		g.HasRemote &&
+		g.Ahead == 0 &&
+		g.Behind == 0 &&
+		!g.HasStashes &&
+		!g.HasChanges &&
+		g.Error == ""
+}
+
 // Format returns the formatted Git status string for display with colorization.
 // Examples (with colors disabled):
-//   - [[ main ]] - On main, in sync with remote, no changes
-//   - [[ main | ↑2 ↓1 ]] - 2 commits ahead, 1 behind
-//   - [[ develop | $ * ]] - Has stashes and uncommitted changes
-//   - [[ DETACHED ]] - Detached HEAD state
-//   - [[ main | ○ ]] - No remote configured
-//   - [[ main | error ]] - Partial error retrieving status
-//   - [[ N/A | error ]] - Error retrieving status (N/A and error are red)
+//   - [[ main ]] - On main, in sync with remote, no changes (gray brackets)
+//   - [[ main | ↑2 ↓1 ]] - 2 commits ahead, 1 behind (yellow brackets)
+//   - [[ develop | $ * ]] - Has stashes and uncommitted changes (yellow brackets)
+//   - [[ DETACHED ]] - Detached HEAD state (yellow brackets)
+//   - [[ main | ○ ]] - No remote configured (yellow brackets)
+//   - [[ main | error ]] - Partial error retrieving status (yellow brackets)
+//   - [[ N/A | error ]] - Error retrieving status (N/A and error are red, yellow brackets)
 func (g *GitStatus) Format() string {
 	var parts []string
 
@@ -137,16 +154,22 @@ func (g *GitStatus) Format() string {
 		parts = append(parts, redColor("error"))
 	}
 
-	// Build result with double gray brackets and separator
+	// Build result with brackets (yellow for non-standard status, gray for standard)
+	// and separator
+	bracketColor := grayColor
+	if !g.IsStandardStatus() {
+		bracketColor = yellowColor
+	}
+
 	var result string
 	if len(parts) == 1 {
 		// Only branch, no separator needed
-		result = grayColor("[[") + " " + parts[0] + " " + grayColor("]]")
+		result = bracketColor("[[") + " " + parts[0] + " " + bracketColor("]]")
 	} else {
 		// Branch + status indicators, use separator
 		separator := " " + grayColor("|") + " "
 		statusParts := strings.Join(parts[1:], " ")
-		result = grayColor("[[") + " " + parts[0] + separator + statusParts + " " + grayColor("]]")
+		result = bracketColor("[[") + " " + parts[0] + separator + statusParts + " " + bracketColor("]]")
 	}
 
 	return result
