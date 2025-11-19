@@ -103,10 +103,8 @@ func (g *GitStatus) Format() string {
 	switch g.Branch {
 	case "main", "master":
 		parts = append(parts, grayColor(g.Branch))
-	case "N/A":
-		parts = append(parts, redColor(g.Branch))
 	default:
-		parts = append(parts, yellowColor(g.Branch))
+		parts = append(parts, redColor(g.Branch))
 	}
 
 	// Ahead/Behind: green/red, or gray no-remote indicator
@@ -119,7 +117,7 @@ func (g *GitStatus) Format() string {
 		}
 	} else if g.Error == "" {
 		// Only show no-remote indicator if there's no error
-		parts = append(parts, grayColor("○"))
+		parts = append(parts, yellowColor("○"))
 	}
 
 	// Stashes: red
