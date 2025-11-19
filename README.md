@@ -19,11 +19,11 @@ Example output:
 
 ```text
 .
-├── project-a [main ↑2 ↓1 $ *]
-├── project-b [develop ○]
+├── project-a [[ main | ↑2 ↓1 $ * ]]
+├── project-b [[ develop | ○ ]]
 └── libs
-    ├── lib-core [main]
-    └── lib-utils [DETACHED *]
+    ├── lib-core [[ main ]]
+    └── lib-utils [[ DETACHED | * ]]
 ```
 
 **Status symbols**:

@@ -81,7 +81,7 @@ make clean              # Remove build artifacts and caches
 
 - Core data structures: `Repository`, `GitStatus`, `TreeNode`, `ScanResult`
 - Validation methods on all models
-- `GitStatus.Format()` returns display string like `[main ↑2 ↓1 $ *]`
+- `GitStatus.Format()` returns display string like `[[ main | ↑2 ↓1 $ * ]]`
 
 ### Concurrency Model
 

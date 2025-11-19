@@ -54,7 +54,7 @@ A developer wants to immediately identify repositories that are ahead of or behi
 1. **Given** a repository that is 2 commits ahead of its remote, **When** the user runs gitree, **Then** the "↑2" indicator is displayed in green color
 2. **Given** a repository that is 1 commit behind its remote, **When** the user runs gitree, **Then** the "↓1" indicator is displayed in red color
 3. **Given** a repository that is both ahead and behind, **When** the user runs gitree, **Then** the ahead indicator (↑) appears in green and the behind indicator (↓) appears in red
-4. **Given** a repository with no remote configured showing the ○ symbol, **When** the user runs gitree, **Then** the ○ symbol is displayed in gray color
+4. **Given** a repository with no remote configured showing the ○ symbol, **When** the user runs gitree, **Then** the ○ symbol is displayed in yellow color
 
 ---
 
@@ -104,7 +104,7 @@ A developer wants to quickly spot repositories with uncommitted changes, stashes
 - **FR-015**: System MUST preserve the existing format of status metadata from FR-011 of spec 001, only adding color and changing bracket style
 - **FR-016**: System MUST apply colors consistently across all status elements within a single repository entry
 - **FR-017**: System MUST maintain the same information density and layout as the uncolored version (colors only, no layout changes beyond bracket style)
-- **FR-018**: System MUST display the no-remote indicator (○) in gray color
+- **FR-018**: System MUST display the no-remote indicator (○) in yellow color
 
 ### Key Entities
 
