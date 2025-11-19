@@ -264,6 +264,7 @@ func TestExtract_HandlesCorruptedRepos(t *testing.T) {
 	require.Error(t, err)
 	// Status may be nil or partial
 	if status != nil {
+		assert.Equal(t, "N/A", status.Branch)
 		assert.NotEmpty(t, status.Error)
 	}
 }
@@ -285,6 +286,7 @@ func TestExtract_RespectsContextTimeout(t *testing.T) {
 	require.Error(t, err)
 	// Status may be partial or nil
 	if status != nil {
+		assert.Equal(t, "N/A", status.Branch)
 		assert.NotEmpty(t, status.Error)
 	}
 }
@@ -351,6 +353,7 @@ func TestExtract_NonExistentPath(t *testing.T) {
 
 	require.Error(t, err)
 	if status != nil {
+		assert.Equal(t, "N/A", status.Branch)
 		assert.NotEmpty(t, status.Error)
 	}
 }
