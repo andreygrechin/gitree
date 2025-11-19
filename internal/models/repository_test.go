@@ -708,3 +708,206 @@ func TestGitStatusFormatDoubleBracketsNoColor(t *testing.T) {
 	// No ANSI codes should be present
 	assert.NotContains(t, output, "\033[", "Output should not contain ANSI color codes when NoColor is true")
 }
+
+// Test IsStandardStatus method.
+func TestIsStandardStatus(t *testing.T) {
+	tests := []struct {
+		name     string
+		status   GitStatus
+		expected bool
+	}{
+		{
+			name: "standard status - main with remote",
+			status: GitStatus{
+				Branch:    "main",
+				HasRemote: true,
+			},
+			expected: true,
+		},
+		{
+			name: "standard status - master with remote",
+			status: GitStatus{
+				Branch:    "master",
+				HasRemote: true,
+			},
+			expected: true,
+		},
+		{
+			name: "non-standard - feature branch",
+			status: GitStatus{
+				Branch:    "feature/new-feature",
+				HasRemote: true,
+			},
+			expected: false,
+		},
+		{
+			name: "non-standard - main with no remote",
+			status: GitStatus{
+				Branch:    "main",
+				HasRemote: false,
+			},
+			expected: false,
+		},
+		{
+			name: "non-standard - main ahead",
+			status: GitStatus{
+				Branch:    "main",
+				HasRemote: true,
+				Ahead:     2,
+			},
+			expected: false,
+		},
+		{
+			name: "non-standard - main behind",
+			status: GitStatus{
+				Branch:    "main",
+				HasRemote: true,
+				Behind:    1,
+			},
+			expected: false,
+		},
+		{
+			name: "non-standard - main with stashes",
+			status: GitStatus{
+				Branch:     "main",
+				HasRemote:  true,
+				HasStashes: true,
+			},
+			expected: false,
+		},
+		{
+			name: "non-standard - main with uncommitted changes",
+			status: GitStatus{
+				Branch:     "main",
+				HasRemote:  true,
+				HasChanges: true,
+			},
+			expected: false,
+		},
+		{
+			name: "non-standard - main with error",
+			status: GitStatus{
+				Branch:    "main",
+				HasRemote: true,
+				Error:     "some error",
+			},
+			expected: false,
+		},
+		{
+			name: "non-standard - detached HEAD",
+			status: GitStatus{
+				Branch:     "DETACHED",
+				IsDetached: true,
+				HasRemote:  false,
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.status.IsStandardStatus()
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+// Test yellow brackets for non-standard status.
+func TestGitStatusFormatYellowBracketsNonStandard(t *testing.T) {
+	color.NoColor = false // Enable colors
+
+	tests := []struct {
+		name   string
+		status GitStatus
+	}{
+		{
+			name: "feature branch",
+			status: GitStatus{
+				Branch:    "feature/new",
+				HasRemote: true,
+			},
+		},
+		{
+			name: "main with no remote",
+			status: GitStatus{
+				Branch:    "main",
+				HasRemote: false,
+			},
+		},
+		{
+			name: "main ahead",
+			status: GitStatus{
+				Branch:    "main",
+				HasRemote: true,
+				Ahead:     2,
+			},
+		},
+		{
+			name: "main behind",
+			status: GitStatus{
+				Branch:    "main",
+				HasRemote: true,
+				Behind:    1,
+			},
+		},
+		{
+			name: "main with uncommitted changes",
+			status: GitStatus{
+				Branch:     "main",
+				HasRemote:  true,
+				HasChanges: true,
+			},
+		},
+		{
+			name: "main with error",
+			status: GitStatus{
+				Branch:    "main",
+				HasRemote: true,
+				Error:     "some error",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output := tt.status.Format()
+			// Bold yellow color code is \033[33;1m
+			assert.Contains(t, output, "\033[33;1m", "Output should contain ANSI bold yellow color code for non-standard status")
+		})
+	}
+}
+
+// Test gray brackets for standard status.
+func TestGitStatusFormatGrayBracketsStandard(t *testing.T) {
+	color.NoColor = false // Enable colors
+
+	tests := []struct {
+		name   string
+		status GitStatus
+	}{
+		{
+			name: "main with remote",
+			status: GitStatus{
+				Branch:    "main",
+				HasRemote: true,
+			},
+		},
+		{
+			name: "master with remote",
+			status: GitStatus{
+				Branch:    "master",
+				HasRemote: true,
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output := tt.status.Format()
+			// Bold gray color code is \033[90;1m (Hi-intensity black/gray with bold)
+			assert.Contains(t, output, "\033[90;1m", "Output should contain ANSI bold gray color code for standard status")
+			// Should NOT contain yellow
+			assert.NotContains(t, output, "\033[33;1m", "Output should not contain yellow color code for standard status")
+		})
+	}
+}
