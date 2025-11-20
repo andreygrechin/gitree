@@ -36,6 +36,49 @@ Example output:
 - `*` - has uncommitted changes
 - `bare` - bare repository
 
+## Installation
+
+### Pre-built Binaries
+
+Download the latest release for your platform from the [releases page](https://github.com/andreygrechin/gitree/releases).
+
+**Linux/macOS:**
+```bash
+# Download the binary for your platform
+# Extract and move to your PATH
+tar -xzf gitree_*.tar.gz
+sudo mv gitree /usr/local/bin/
+```
+
+**Windows:**
+Download the `.zip` file, extract it, and add the directory to your PATH.
+
+### Using Go Install
+
+If you have Go 1.25+ installed:
+
+```bash
+go install github.com/andreygrechin/gitree/cmd/gitree@latest
+```
+
+The binary will be installed to `$GOPATH/bin/gitree` (or `$HOME/go/bin/gitree` by default).
+
+### From Source
+
+Clone the repository and build:
+
+```bash
+git clone https://github.com/andreygrechin/gitree.git
+cd gitree
+make build
+```
+
+The binary will be created at `bin/gitree`. You can then move it to your PATH:
+
+```bash
+sudo mv bin/gitree /usr/local/bin/
+```
+
 ## Build
 
 ```bash
