@@ -156,7 +156,7 @@ specs/[###-feature]/
 ├── data-model.md        # Phase 1 output (/speckit.plan command)
 ├── quickstart.md        # Phase 1 output (/speckit.plan command)
 ├── contracts/           # Phase 1 output (/speckit.plan command)
-└── tasks.md             # Phase 2 output (/speckit.tasks command - NOT created by /speckit.plan)
+└── tasks.md             # Phase 2 output (/speckit.tasks command)
 ```
 
 ### Source Code (repository root)
@@ -165,11 +165,11 @@ specs/[###-feature]/
 cmd/gitree/
 ├── main.go              # Main entry point (to be refactored to use Cobra)
 └── root.go              # NEW: Cobra root command definition
+└── color_test.go
+└── version_test.go
 
 internal/
 ├── cli/                 # NEW: CLI-specific utilities
-│   ├── version.go       # Version information and formatting
-│   ├── version_test.go  # Version display tests
 │   ├── filter.go        # Repository filtering logic
 │   └── filter_test.go   # Filter logic tests
 ├── gitstatus/

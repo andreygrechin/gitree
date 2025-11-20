@@ -51,14 +51,15 @@ Use --all to show all repositories including clean ones.`,
 	exitAfterVersion = func() error {
 		os.Exit(0)
 
-		return nil
+		return nil // Unreachable but required for testability
 	}
 )
 
 func init() { //nolint:gochecknoinits // Cobra CLI initialization
 	rootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "Display version information")
 	rootCmd.Flags().BoolVar(&noColorFlag, "no-color", false, "Disable color output")
-	rootCmd.Flags().BoolVarP(&allFlag, "all", "a", false, "Show all repositories including clean ones (default shows only repos needing attention)")
+	rootCmd.Flags().BoolVarP(&allFlag, "all", "a", false,
+		"Show all repositories including clean ones (default shows only repos needing attention)")
 
 	// Set PersistentPreRun to handle global flags (color suppression)
 	rootCmd.PersistentPreRun = handleGlobalFlags

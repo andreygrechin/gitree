@@ -27,7 +27,7 @@ func TestIsClean_AllConditionsMet(t *testing.T) {
 	assert.True(t, IsClean(repo), "Repository should be clean when all conditions are met")
 
 	// Also test with "master" branch
-	repo.GitStatus.Branch = "master" //nolint:goconst // "main" and "master" are domain literals
+	repo.GitStatus.Branch = "master"
 	assert.True(t, IsClean(repo), "Repository on master branch should also be clean")
 }
 

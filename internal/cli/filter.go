@@ -19,56 +19,16 @@ type FilterOptions struct {
 // 8. No error in status extraction
 //
 // If any condition fails, the repository needs attention and is NOT clean.
+//
+// This function delegates to GitStatus.IsStandardStatus() to avoid code duplication.
 func IsClean(repo *models.Repository) bool {
 	// Fail-safe: nil status = unknown = not clean (FR-009)
 	if repo == nil || repo.GitStatus == nil {
 		return false
 	}
 
-	status := repo.GitStatus
-
-	// Fail-safe: status extraction error = not clean (FR-009)
-	if status.Error != "" {
-		return false
-	}
-
-	// Must be on main or master branch
-	if status.Branch != "main" && status.Branch != "master" {
-		return false
-	}
-
-	// No uncommitted changes
-	if status.HasChanges {
-		return false
-	}
-
-	// No stashes
-	if status.HasStashes {
-		return false
-	}
-
-	// Must have remote tracking
-	if !status.HasRemote {
-		return false
-	}
-
-	// Not ahead of remote
-	if status.Ahead > 0 {
-		return false
-	}
-
-	// Not behind remote
-	if status.Behind > 0 {
-		return false
-	}
-
-	// Not in detached HEAD state
-	if status.IsDetached {
-		return false
-	}
-
-	// All conditions met: repository is clean
-	return true
+	// Delegate to IsStandardStatus which checks all the clean state conditions
+	return repo.GitStatus.IsStandardStatus()
 }
 
 // FilterRepositories filters the repository list based on options.
