@@ -14,9 +14,9 @@ all: lint test build
 build:
 	CGO_ENABLED=0 \
 	go build \
-		-ldflags "-s -w" \
+		-ldflags "-s -w -X 'main.version=$(VERSION)' -X 'main.commit=$(COMMIT)' -X 'main.buildTime=$(BUILDTIME)'" \
 		-o bin/$(APP_NAME) \
-		cmd/gitree/main.go
+		./cmd/gitree
 
 format:
 	gofumpt -l -w .
@@ -39,7 +39,7 @@ cov-integration:
 		-ldflags "-s -w" \
 		-o bin/$(APP_NAME) \
 		-cover \
-		cmd/gitree/main.go
+		./cmd/gitree
 	go tool covdata percent -i=covdatafiles
 
 cov-unit:

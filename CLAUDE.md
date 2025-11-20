@@ -6,6 +6,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `gitree` is a CLI tool that recursively scans directories for Git repositories and displays them in a tree structure with status information. It uses go-git for Git operations and implements concurrent status extraction with configurable timeouts.
 
+**Default Behavior**: By default, gitree only shows repositories needing attention (uncommitted changes, non-main/master branches, ahead/behind remote, stashes, or no remote tracking). Use `--all` flag to show all repositories including clean ones.
+
+**Available Flags**:
+
+- `--version, -v`: Display version, commit hash, and build time
+- `--no-color`: Disable color output (also respects NO_COLOR environment variable)
+- `--all, -a`: Show all repositories including clean ones (default shows only repos needing attention)
+- `--help, -h`: Display help information
+
 ## Build & Development Commands
 
 ### Building
@@ -130,8 +139,9 @@ make clean              # Remove build artifacts and caches
 
 ## Active Technologies
 
-- Go 1.25.4 + fatih/color (already present via go-git dependencies) or golang.org/x/term for color suppor (002-colorized-status-output)
+- Go 1.25.4 (003-cobra-cli-flags)
+- N/A (CLI tool reads git repositories from filesystem) (003-cobra-cli-flags)
 
 ## Recent Changes
 
-- 002-colorized-status-output: Added Go 1.25.4 + fatih/color (already present via go-git dependencies) or golang.org/x/term for color suppor
+- 003-cobra-cli-flags: Added Go 1.25.4
