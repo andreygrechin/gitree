@@ -40,35 +40,7 @@ Example output:
 
 ### Pre-built Binaries
 
-Download the latest release from the [releases page](https://github.com/andreygrechin/gitree/releases).
-
-**Linux/macOS:**
-```bash
-tar -xzf gitree_*.tar.gz
-sudo mv gitree /usr/local/bin/
-```
-
-**Windows:** Extract the `.zip` file and add the directory to your PATH.
-
-<details>
-<summary>Install a specific version</summary>
-
-Replace the download URL with the specific version tag (e.g., `v1.0.0`):
-```bash
-wget https://github.com/andreygrechin/gitree/releases/download/v1.0.0/gitree_*.tar.gz
-```
-</details>
-
-<details>
-<summary>Upgrade/Uninstall</summary>
-
-**Upgrade:** Download the new version and replace the existing binary.
-
-**Uninstall:**
-```bash
-sudo rm /usr/local/bin/gitree
-```
-</details>
+Download the latest release binaries from the [releases page](https://github.com/andreygrechin/gitree/releases) and follow the best practices for your OS to install them.
 
 ### Using Go Install
 
@@ -109,32 +81,8 @@ rm $(go env GOPATH)/bin/gitree
 git clone https://github.com/andreygrechin/gitree.git
 cd gitree
 make build
-sudo mv bin/gitree /usr/local/bin/  # or run directly: ./bin/gitree
+bin/gitree
 ```
-
-<details>
-<summary>Build a specific version</summary>
-
-Checkout the specific tag before building:
-```bash
-git clone https://github.com/andreygrechin/gitree.git
-cd gitree
-git checkout v1.0.0
-make build
-```
-</details>
-
-<details>
-<summary>Upgrade/Uninstall</summary>
-
-**Upgrade:**
-```bash
-git pull origin main
-make build
-```
-
-**Uninstall:** `sudo rm /usr/local/bin/gitree`
-</details>
 
 ## Build
 
