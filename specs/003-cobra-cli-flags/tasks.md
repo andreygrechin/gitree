@@ -49,7 +49,7 @@ This is a single Go project with the following structure:
 
 ---
 
-## Phase 3: User Story 1 - View Application Version Information (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - View Application Version Information (Priority: P2)
 
 **Goal**: Users can view version, build time, and commit hash to verify their installation and report issues
 
@@ -75,7 +75,7 @@ This is a single Go project with the following structure:
 
 ---
 
-## Phase 4: User Story 2 - Suppress Color Output (Priority: P2)
+## Phase 4: User Story 2 - Suppress Color Output (Priority: P3)
 
 **Goal**: Users can suppress color formatting for automation, logging, and non-color-supporting terminals
 
@@ -101,7 +101,7 @@ This is a single Go project with the following structure:
 
 ---
 
-## Phase 5: User Story 3 - Show All Repositories Including Clean Ones (Priority: P2)
+## Phase 5: User Story 3 - Show All Repositories Including Clean Ones (Priority: P1) 🎯 MVP
 
 **Goal**: Users can optionally view all repositories (clean and changed) while the default shows only repositories needing attention
 

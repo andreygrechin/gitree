@@ -60,4 +60,4 @@ Per Constitution III (Test-First):
 
 ## Next Steps
 
-See  command to generate implementation tasks.
+See `/speckit.tasks` command to generate implementation tasks.

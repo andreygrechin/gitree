@@ -29,7 +29,7 @@ func TestNoColorFlag_ProducesZeroANSI(t *testing.T) {
 	// Mock exitAfterVersion
 	origExit := exitAfterVersion
 	exitAfterVersion = func() error { return nil }
-	defer func() { exitAfterVersion = origExit }()
+	t.Cleanup(func() { exitAfterVersion = origExit })
 
 	// Capture output with --no-color flag and --version (quick test)
 	var buf bytes.Buffer
@@ -70,7 +70,7 @@ func TestNoColorFlag_EnvironmentVariable(t *testing.T) {
 	// Mock exitAfterVersion
 	origExit := exitAfterVersion
 	exitAfterVersion = func() error { return nil }
-	defer func() { exitAfterVersion = origExit }()
+	t.Cleanup(func() { exitAfterVersion = origExit })
 
 	// Capture output with NO_COLOR env var (test with version flag)
 	var buf bytes.Buffer
