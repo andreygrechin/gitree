@@ -58,7 +58,7 @@ Use --all to show all repositories including clean ones.`,
 func init() { //nolint:gochecknoinits // Cobra CLI initialization
 	rootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "Display version information")
 	rootCmd.Flags().BoolVar(&noColorFlag, "no-color", false, "Disable color output")
-	rootCmd.Flags().BoolVar(&allFlag, "all", false, "Show all repositories including clean ones (default shows only repos needing attention)")
+	rootCmd.Flags().BoolVarP(&allFlag, "all", "a", false, "Show all repositories including clean ones (default shows only repos needing attention)")
 
 	// Set PersistentPreRun to handle global flags (color suppression)
 	rootCmd.PersistentPreRun = handleGlobalFlags
