@@ -40,21 +40,57 @@ Example output:
 
 ### Pre-built Binaries
 
-Download the latest release binaries for your platform from the [releases page](https://github.com/andreygrechin/gitree/releases) and follow the best practices to install them into your OS.
+Download the latest release for your platform from the [releases page](https://github.com/andreygrechin/gitree/releases).
+
+**Linux/macOS:**
+```bash
+# Download the binary for your platform
+# Extract and move to your PATH
+tar -xzf gitree_*.tar.gz
+sudo mv gitree /usr/local/bin/
+
+# Verify the installation
+gitree --version
+```
+
+**Windows:**
+Download the `.zip` file, extract it, and add the directory to your PATH environment variable.
+
+**To upgrade:** Download the new version and replace the existing binary.
+
+**To uninstall:** Simply remove the binary:
+```bash
+sudo rm /usr/local/bin/gitree
+```
 
 ### Using Go Install
 
-If you have Go 1.25+ installed:
+If you have Go 1.25+ installed, you can install `gitree` directly from source using Go's built-in package installer:
 
 ```bash
 go install github.com/andreygrechin/gitree/cmd/gitree@latest
 ```
 
-The binary will be installed to `$GOPATH/bin/gitree` (or `$HOME/go/bin/gitree` by default).
+This command will:
+- Download the source code
+- Compile the binary for your platform
+- Install it to `$GOPATH/bin/gitree` (typically `$HOME/go/bin/gitree`)
+
+Make sure `$GOPATH/bin` is in your PATH. Add this to your shell profile if needed:
+```bash
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
+**To upgrade:** Run the same `go install` command with `@latest` to get the newest version.
+
+**To uninstall:**
+```bash
+rm $(go env GOPATH)/bin/gitree
+```
 
 ### From Source
 
-Clone the repository and build:
+Clone the repository and build from source:
 
 ```bash
 git clone https://github.com/andreygrechin/gitree.git
@@ -62,11 +98,24 @@ cd gitree
 make build
 ```
 
-The binary will be created at `bin/gitree`. You can then move it to your PATH:
+The binary will be created at `bin/gitree`. You can run it directly or move it to your PATH:
 
 ```bash
+# Option 1: Run directly
+./bin/gitree
+
+# Option 2: Install to PATH
 sudo mv bin/gitree /usr/local/bin/
 ```
+
+**To upgrade:** Pull the latest changes and rebuild:
+```bash
+cd gitree
+git pull origin main
+make build
+```
+
+**To uninstall:** Remove the binary as shown in the pre-built binaries section.
 
 ## Build
 
