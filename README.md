@@ -40,18 +40,7 @@ Example output:
 
 ### Pre-built Binaries
 
-Download the latest release for your platform from the [releases page](https://github.com/andreygrechin/gitree/releases).
-
-**Linux/macOS:**
-```bash
-# Download the binary for your platform
-# Extract and move to your PATH
-tar -xzf gitree_*.tar.gz
-sudo mv gitree /usr/local/bin/
-```
-
-**Windows:**
-Download the `.zip` file, extract it, and add the directory to your PATH.
+Download the latest release binaries for your platform from the [releases page](https://github.com/andreygrechin/gitree/releases) and follow the best practices to install them into your OS.
 
 ### Using Go Install
 
