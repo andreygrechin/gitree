@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `--version, -v`: Display version, commit hash, and build time
 - `--no-color`: Disable color output (also respects NO_COLOR environment variable)
-- `--all`: Show all repositories including clean ones (default shows only repos needing attention)
+- `--all, -a`: Show all repositories including clean ones (default shows only repos needing attention)
 - `--help, -h`: Display help information
 
 ## Build & Development Commands
