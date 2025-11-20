@@ -24,6 +24,7 @@ const (
 	defaultContextTimeout = 5 * time.Minute
 )
 
+//nolint:gochecknoglobals // CLI flags and root command
 var (
 	// Flags.
 	versionFlag bool
@@ -46,7 +47,7 @@ Use --all to show all repositories including clean ones.`,
 	}
 )
 
-func init() {
+func init() { //nolint:gochecknoinits // Cobra CLI initialization
 	rootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "Display version information")
 	rootCmd.Flags().BoolVar(&noColorFlag, "no-color", false, "Disable color output")
 	rootCmd.Flags().BoolVar(&allFlag, "all", false, "Show all repositories including clean ones (default shows only repos needing attention)")
@@ -59,7 +60,7 @@ func init() {
 }
 
 // handleGlobalFlags handles global flags that affect all commands.
-func handleGlobalFlags(cmd *cobra.Command, args []string) {
+func handleGlobalFlags(_ *cobra.Command, _ []string) {
 	// Handle color suppression (--no-color flag or NO_COLOR environment variable)
 	if noColorFlag || os.Getenv("NO_COLOR") != "" {
 		color.NoColor = true
@@ -67,7 +68,7 @@ func handleGlobalFlags(cmd *cobra.Command, args []string) {
 }
 
 // handleVersionFlag handles the --version flag with precedence over other operations.
-func handleVersionFlag(cmd *cobra.Command, args []string) error {
+func handleVersionFlag(cmd *cobra.Command, _ []string) error {
 	if versionFlag {
 		displayVersion(cmd)
 		// Exit after displaying version (prevents further execution)
@@ -80,7 +81,7 @@ func handleVersionFlag(cmd *cobra.Command, args []string) error {
 
 // exitAfterVersion signals that we should exit after showing version.
 // This is a separate function to make it testable.
-var exitAfterVersion = func() error {
+var exitAfterVersion = func() error { //nolint:gochecknoglobals // Testable exit function
 	os.Exit(0)
 
 	return nil
@@ -97,7 +98,7 @@ func formatVersion(ver, cmt, btime string) string {
 	return fmt.Sprintf("gitree version %s\n  commit: %s\n  built:  %s", ver, cmt, btime)
 }
 
-func runGitree(cmd *cobra.Command, args []string) error {
+func runGitree(_ *cobra.Command, _ []string) error {
 	// Get current working directory
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -128,7 +129,7 @@ func runGitree(cmd *cobra.Command, args []string) error {
 	// Check if any repositories were found
 	if len(scanResult.Repositories) == 0 {
 		s.Stop()
-		fmt.Fprintln(os.Stdout, "No Git repositories found in this directory.")
+		_, _ = fmt.Fprintln(os.Stdout, "No Git repositories found in this directory.")
 
 		return nil
 	}
@@ -168,8 +169,8 @@ func runGitree(cmd *cobra.Command, args []string) error {
 	// Check if all repos were filtered out (all clean in default mode)
 	if len(filteredRepos) == 0 && !allFlag {
 		s.Stop()
-		fmt.Fprintln(os.Stdout, "All repositories are in clean state (on main/master, in sync with remote, no changes).")
-		fmt.Fprintln(os.Stdout, "Use --all flag to show all repositories including clean ones.")
+		_, _ = fmt.Fprintln(os.Stdout, "All repositories are in clean state (on main/master, in sync with remote, no changes).")
+		_, _ = fmt.Fprintln(os.Stdout, "Use --all flag to show all repositories including clean ones.")
 
 		return nil
 	}
@@ -182,7 +183,7 @@ func runGitree(cmd *cobra.Command, args []string) error {
 
 	// Format and print tree
 	output := tree.Format(root, nil)
-	fmt.Fprint(os.Stdout, output)
+	_, _ = fmt.Fprint(os.Stdout, output)
 
 	return nil
 }

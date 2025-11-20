@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+//nolint:gochecknoglobals // Version info variables
 var (
 	// Version information (injected at build time via ldflags).
 	version   = "dev"
