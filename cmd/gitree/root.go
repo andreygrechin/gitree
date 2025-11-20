@@ -45,6 +45,14 @@ Use --all to show all repositories including clean ones.`,
 		SilenceUsage:  true,
 		RunE:          runGitree,
 	}
+
+	// exitAfterVersion signals that we should exit after showing version.
+	// This is a separate function to make it testable.
+	exitAfterVersion = func() error {
+		os.Exit(0)
+
+		return nil
+	}
 )
 
 func init() { //nolint:gochecknoinits // Cobra CLI initialization
@@ -75,14 +83,6 @@ func handleVersionFlag(cmd *cobra.Command, _ []string) error {
 		// Note: In tests, this will be caught by cmd.Execute() returning nil
 		return exitAfterVersion()
 	}
-
-	return nil
-}
-
-// exitAfterVersion signals that we should exit after showing version.
-// This is a separate function to make it testable.
-var exitAfterVersion = func() error { //nolint:gochecknoglobals // Testable exit function
-	os.Exit(0)
 
 	return nil
 }
