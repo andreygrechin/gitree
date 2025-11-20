@@ -36,6 +36,54 @@ Example output:
 - `*` - has uncommitted changes
 - `bare` - bare repository
 
+## Installation
+
+### Pre-built Binaries
+
+Download the latest release binaries from the [releases page](https://github.com/andreygrechin/gitree/releases) and follow the best practices for your OS to install them.
+
+### Using Go Install
+
+If you have Go 1.25+ installed:
+
+```bash
+go install github.com/andreygrechin/gitree/cmd/gitree@latest
+```
+
+Installs to `$GOPATH/bin/gitree` (typically `$HOME/go/bin/gitree`). Ensure `$GOPATH/bin` is in your PATH:
+```bash
+export PATH="$PATH:$(go env GOPATH)/bin"
+```
+
+<details>
+<summary>Install a specific version</summary>
+
+Use the version tag instead of `@latest`:
+```bash
+go install github.com/andreygrechin/gitree/cmd/gitree@v1.0.0
+```
+</details>
+
+<details>
+<summary>Upgrade/Uninstall</summary>
+
+**Upgrade:** Run the same command with `@latest` or a newer version tag.
+
+**Uninstall:**
+```bash
+rm $(go env GOPATH)/bin/gitree
+```
+</details>
+
+### From Source
+
+```bash
+git clone https://github.com/andreygrechin/gitree.git
+cd gitree
+make build
+bin/gitree
+```
+
 ## Build
 
 ```bash
