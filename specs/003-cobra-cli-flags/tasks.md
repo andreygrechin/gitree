@@ -165,9 +165,9 @@ This is a single Go project with the following structure:
 
 ### User Story Dependencies
 
-- **User Story 1 (P1) - Version**: Can start after Foundational (Phase 2) - Completely independent
-- **User Story 2 (P2) - No-Color**: Can start after Foundational (Phase 2) - Completely independent
-- **User Story 3 (P2) - Filtering/All**: Can start after Foundational (Phase 2) - Completely independent
+- **User Story 1 (P2) - Version**: Can start after Foundational (Phase 2) - Completely independent
+- **User Story 2 (P3) - No-Color**: Can start after Foundational (Phase 2) - Completely independent
+- **User Story 3 (P1) - Filtering/All**: Can start after Foundational (Phase 2) - Completely independent
 
 ### Within Each User Story
 
