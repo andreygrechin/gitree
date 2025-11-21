@@ -58,8 +58,8 @@ func IsGitRepository(path string) (isRepo, isBare bool) {
 	return false, false
 }
 
-// debugPrintlnf outputs a debug message to stderr if debug is enabled.
-func debugPrintlnf(debug bool, format string, args ...any) {
+// debugPrintf formats the message using fmt.Sprintf, adds a "DEBUG: " prefix, and outputs it to stderr if debug is enabled.
+func debugPrintf(debug bool, format string, args ...any) {
 	if !debug {
 		return
 	}
@@ -147,7 +147,7 @@ func (s *scanner) walkFunc(ctx context.Context, path string, d fs.DirEntry, err 
 	// Handle permission errors (non-fatal)
 	if err != nil {
 		if os.IsPermission(err) {
-			debugPrintlnf(s.opts.Debug, "Skipping %s: permission denied", path)
+			debugPrintf(s.opts.Debug, "Skipping %s: permission denied", path)
 			s.errors = append(s.errors, fmt.Errorf("permission denied: %s: %w", path, errPermissionDenied))
 
 			return fs.SkipDir // Skip this directory but continue scanning
@@ -161,20 +161,20 @@ func (s *scanner) walkFunc(ctx context.Context, path string, d fs.DirEntry, err 
 		return nil
 	}
 
-	debugPrintlnf(s.opts.Debug, "Entering directory: %s", path)
+	debugPrintf(s.opts.Debug, "Entering directory: %s", path)
 
 	s.dirCount++
 
 	// Check for symlink loops using inode tracking
 	shouldVisit, isSymlink, err := s.shouldVisit(path)
 	if err != nil {
-		debugPrintlnf(s.opts.Debug, "Skipping %s: %v", path, err)
+		debugPrintf(s.opts.Debug, "Skipping %s: %v", path, err)
 		s.errors = append(s.errors, fmt.Errorf("error checking path %s: %w", path, err))
 
 		return fs.SkipDir
 	}
 	if !shouldVisit {
-		debugPrintlnf(s.opts.Debug, "Skipping %s: already visited (symlink loop)", path)
+		debugPrintf(s.opts.Debug, "Skipping %s: already visited (symlink loop)", path)
 
 		return fs.SkipDir // Already visited or symlink loop
 	}
@@ -186,7 +186,7 @@ func (s *scanner) walkFunc(ctx context.Context, path string, d fs.DirEntry, err 
 		if isBare {
 			repoType = "bare"
 		}
-		debugPrintlnf(s.opts.Debug, "Found git repository: %s (%s)", path, repoType)
+		debugPrintf(s.opts.Debug, "Found git repository: %s (%s)", path, repoType)
 
 		repo := &models.Repository{
 			Path:      path,
@@ -199,7 +199,7 @@ func (s *scanner) walkFunc(ctx context.Context, path string, d fs.DirEntry, err 
 
 		// Skip traversing into repository contents (FR-018)
 		// We found a repo, so we don't need to look inside it for more repos
-		debugPrintlnf(s.opts.Debug, "Skipping %s: inside git repository", path)
+		debugPrintf(s.opts.Debug, "Skipping %s: inside git repository", path)
 
 		return fs.SkipDir
 	}

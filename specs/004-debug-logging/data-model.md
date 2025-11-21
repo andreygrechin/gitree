@@ -85,9 +85,10 @@ type ExtractOptions struct {
 **Purpose**: Helper function to conditionally output debug messages
 
 ```go
-// debugPrintln outputs a debug message to stderr if debug is enabled.
+// debugPrintf formats the message using fmt.Sprintf, adds a "DEBUG: " prefix,
+// and outputs it to stderr if debug is enabled.
 // Format follows fmt.Fprintf conventions.
-func debugPrintln(debug bool, format string, args ...interface{}) {
+func debugPrintf(debug bool, format string, args ...interface{}) {
     if !debug {
         return
     }
@@ -202,7 +203,7 @@ cmd/gitree/root.go (runGitree)
     │       ↓
     │   scanner.walkFunc() checks opts.Debug
     │       ↓
-    │   debugPrintln(opts.Debug, "Entering directory: %s", path)
+    │   debugPrintf(opts.Debug, "Entering directory: %s", path)
     │
     └─→ ExtractOptions{Debug: debugFlag}
             ↓
@@ -210,7 +211,7 @@ cmd/gitree/root.go (runGitree)
             ↓
         extractGitStatus() checks opts.Debug
             ↓
-        debugPrintln(opts.Debug, "Repository %s: branch=%s", path, branch)
+        debugPrintf(opts.Debug, "Repository %s: branch=%s", path, branch)
 ```
 
 ## Relationships

@@ -76,8 +76,9 @@ type ExtractOptions struct {
 **File**: `internal/scanner/scanner.go` (add at package level)
 
 ```go
-// debugPrintln outputs a debug message to stderr if debug is enabled.
-func debugPrintln(debug bool, format string, args ...interface{}) {
+// debugPrintf formats the message using fmt.Sprintf, adds a "DEBUG: " prefix,
+// and outputs it to stderr if debug is enabled.
+func debugPrintf(debug bool, format string, args ...interface{}) {
     if !debug {
         return
     }
@@ -89,8 +90,9 @@ func debugPrintln(debug bool, format string, args ...interface{}) {
 **File**: `internal/gitstatus/status.go` (add same function)
 
 ```go
-// debugPrintln outputs a debug message to stderr if debug is enabled.
-func debugPrintln(debug bool, format string, args ...interface{}) {
+// debugPrintf formats the message using fmt.Sprintf, adds a "DEBUG: " prefix,
+// and outputs it to stderr if debug is enabled.
+func debugPrintf(debug bool, format string, args ...interface{}) {
     if !debug {
         return
     }
@@ -195,7 +197,7 @@ func (s *scanner) walkFunc(ctx context.Context, path string, d fs.DirEntry, err 
     // Handle permission errors (non-fatal)
     if err != nil {
         if os.IsPermission(err) {
-            debugPrintln(s.opts.Debug, "Skipping %s: permission denied", path)  // Add this
+            debugPrintf(s.opts.Debug, "Skipping %s: permission denied", path)  // Add this
             s.errors = append(s.errors, fmt.Errorf("permission denied: %s: %w", path, errPermissionDenied))
             return fs.SkipDir
         }
@@ -207,19 +209,19 @@ func (s *scanner) walkFunc(ctx context.Context, path string, d fs.DirEntry, err 
         return nil
     }
 
-    debugPrintln(s.opts.Debug, "Entering directory: %s", path)  // Add this
+    debugPrintf(s.opts.Debug, "Entering directory: %s", path)  // Add this
 
     s.dirCount++
 
     // Check for symlink loops
     shouldVisit, isSymlink, err := s.shouldVisit(path)
     if err != nil {
-        debugPrintln(s.opts.Debug, "Skipping %s: %v", path, err)  // Add this
+        debugPrintf(s.opts.Debug, "Skipping %s: %v", path, err)  // Add this
         s.errors = append(s.errors, fmt.Errorf("error checking path %s: %w", path, err))
         return fs.SkipDir
     }
     if !shouldVisit {
-        debugPrintln(s.opts.Debug, "Skipping %s: already visited (symlink loop)", path)  // Add this
+        debugPrintf(s.opts.Debug, "Skipping %s: already visited (symlink loop)", path)  // Add this
         return fs.SkipDir
     }
 
@@ -230,7 +232,7 @@ func (s *scanner) walkFunc(ctx context.Context, path string, d fs.DirEntry, err 
         if isBare {
             repoType = "bare"
         }
-        debugPrintln(s.opts.Debug, "Found git repository: %s (%s)", path, repoType)  // Add this
+        debugPrintf(s.opts.Debug, "Found git repository: %s (%s)", path, repoType)  // Add this
 
         repo := &models.Repository{
             Path:      path,
@@ -241,7 +243,7 @@ func (s *scanner) walkFunc(ctx context.Context, path string, d fs.DirEntry, err 
 
         s.repositories = append(s.repositories, repo)
 
-        debugPrintln(s.opts.Debug, "Skipping %s: inside git repository", path)  // Add this
+        debugPrintf(s.opts.Debug, "Skipping %s: inside git repository", path)  // Add this
         return fs.SkipDir
     }
 
@@ -299,7 +301,7 @@ func extractGitStatus(repoPath string, opts *ExtractOptions) (*models.GitStatus,
         // Timing (only if >100ms)
         duration := time.Since(startTime)
         if duration > 100*time.Millisecond {
-            debugPrintln(true, "Repository %s status extraction: %dms", repoPath, duration.Milliseconds())
+            debugPrintf(true, "Repository %s status extraction: %dms", repoPath, duration.Milliseconds())
         }
 
         // Status summary
@@ -320,7 +322,7 @@ func extractGitStatus(repoPath string, opts *ExtractOptions) (*models.GitStatus,
             statusParts = append(statusParts, "hasStashes=true")
         }
 
-        debugPrintln(true, "Repository %s: %s", repoPath, strings.Join(statusParts, ", "))
+        debugPrintf(true, "Repository %s: %s", repoPath, strings.Join(statusParts, ", "))
     }
 
     return status, nil
@@ -391,10 +393,10 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, o
                 return
             }
             if len(files) <= 20 {
-                debugPrintln(true, "%s files (%d): %s", category, len(files), strings.Join(files, ", "))
+                debugPrintf(true, "%s files (%d): %s", category, len(files), strings.Join(files, ", "))
             } else {
-                debugPrintln(true, "%s files (%d): %s", category, len(files), strings.Join(files[:20], ", "))
-                debugPrintln(true, "...and %d more %s files", len(files)-20, strings.ToLower(category))
+                debugPrintf(true, "%s files (%d): %s", category, len(files), strings.Join(files[:20], ", "))
+                debugPrintf(true, "...and %d more %s files", len(files)-20, strings.ToLower(category))
             }
         }
 
@@ -463,13 +465,13 @@ make build
 2. `internal/scanner/scanner.go`:
    - `ScanOptions` struct - add Debug field
    - `walkFunc()` - add debug output
-   - Add `debugPrintln()` helper
+   - Add `debugPrintf()` helper
 
 3. `internal/gitstatus/status.go`:
    - `ExtractOptions` struct - add Debug field
    - `extractGitStatus()` - add timing and status debug
    - `extractUncommittedChanges()` - add file listing
-   - Add `debugPrintln()` helper
+   - Add `debugPrintf()` helper
 
 ### Testing Checklist
 
@@ -539,7 +541,7 @@ if !debugFlag {
 
 ```go
 if opts != nil && opts.Debug {
-    debugPrintln(true, "message")
+    debugPrintf(true, "message")
 }
 ```
 

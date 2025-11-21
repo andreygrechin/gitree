@@ -29,11 +29,11 @@ type ExtractOptions struct {
 }
 
 const (
-	defaultExtractTimeout = 10 * time.Second
-	defaultMaxConcurrency = 10
+	defaultExtractTimeout  = 10 * time.Second
+	defaultMaxConcurrency  = 10
+	maxFilesPerCategory    = 20
+	thresholdSlowOperation = 100 * time.Millisecond
 )
-
-const maxFilesPerCategory = 20
 
 // DefaultOptions returns sensible default options.
 func DefaultOptions() *ExtractOptions {
@@ -152,7 +152,7 @@ func extractGitStatus(repoPath string, opts *ExtractOptions) (*models.GitStatus,
 func printDebugSummary(repoPath string, status *models.GitStatus, startTime time.Time) {
 	// Timing (only if >100ms)
 	duration := time.Since(startTime)
-	if duration > 100*time.Millisecond {
+	if duration > thresholdSlowOperation {
 		fmt.Fprintf(os.Stderr, "DEBUG: Repository %s status extraction: %dms\n", repoPath, duration.Milliseconds())
 	}
 

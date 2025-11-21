@@ -28,8 +28,8 @@ Gitree uses standard Go single-project layout:
 
 - [ ] T001 [P] Add Debug field to ScanOptions struct in internal/scanner/scanner.go
 - [ ] T002 [P] Add Debug field to ExtractOptions struct in internal/gitstatus/status.go
-- [ ] T003 [P] Add debugPrintln helper function in internal/scanner/scanner.go
-- [ ] T004 [P] Add debugPrintln helper function in internal/gitstatus/status.go
+- [ ] T003 [P] Add debugPrintf helper function in internal/scanner/scanner.go
+- [ ] T004 [P] Add debugPrintf helper function in internal/gitstatus/status.go
 
 ---
 
@@ -203,8 +203,8 @@ Gitree uses standard Go single-project layout:
 # Launch all setup tasks together:
 Task: "Add Debug field to ScanOptions struct in internal/scanner/scanner.go"
 Task: "Add Debug field to ExtractOptions struct in internal/gitstatus/status.go"
-Task: "Add debugPrintln helper function in internal/scanner/scanner.go"
-Task: "Add debugPrintln helper function in internal/gitstatus/status.go"
+Task: "Add debugPrintf helper function in internal/scanner/scanner.go"
+Task: "Add debugPrintf helper function in internal/gitstatus/status.go"
 ```
 
 ## Parallel Example: User Story 3 Tests

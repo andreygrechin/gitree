@@ -286,7 +286,7 @@ All questions from the implementation plan have been resolved:
 1. Add `Debug bool` to `ScanOptions` and `ExtractOptions` structs
 2. Add `--debug` flag to CLI flag parsing
 3. Wire debug flag through options from CLI to scanner to gitstatus
-4. Add helper function for debug output: `debugPrintln(debug bool, format string, args ...interface{})`
+4. Add helper function for debug output: `debugPrintf(debug bool, format string, args ...interface{})`
 
 **Phase 2: Scanner Debug Output**
 
