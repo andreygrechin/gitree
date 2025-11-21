@@ -43,7 +43,8 @@ Example output:
 The easiest way to install on macOS is using Homebrew:
 
 ```bash
-brew install --cask andreygrechin/tap/gitree
+brew tap andreygrechin/tap
+brew install --cask gitree
 ```
 
 <details>
