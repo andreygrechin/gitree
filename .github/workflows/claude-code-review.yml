@@ -2,27 +2,15 @@ name: Claude Code Review
 
 on:
   issue_comment:
-    types: [created, edited]
-
-  # pull_request:
-  #   types: [opened, synchronize]  # Add more triggers
-    # Optional: Only run on specific file changes
-    # paths:
-    #   - "src/**/*.ts"
-    #   - "src/**/*.tsx"
-    #   - "src/**/*.js"
-    #   - "src/**/*.jsx"
-
-concurrency:
-  group: claude-review-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
 jobs:
   claude-review:
-    if: |
-      github.event.issue.pull_request &&
-      contains(github.event.comment.body, '/review')
     timeout-minutes: 10
+    if: |
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude'))
     runs-on: ubuntu-latest
     permissions:
       contents: read
