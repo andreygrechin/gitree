@@ -85,11 +85,9 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Install dependencies
-        run:
-          - go mod download
+        run: go mod download
       - name: Build
-        run:
-          - make build
+        run: make build
       - name: Test
         run: go test -coverprofile=coverage.txt -v ./...
 
