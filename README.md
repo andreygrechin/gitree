@@ -1,5 +1,10 @@
 # gitree
 
+[![Build](https://github.com/andreygrechin/gitree/actions/workflows/build.yml/badge.svg)](https://github.com/andreygrechin/gitree/actions/workflows/build.yml)
+[![Release](https://github.com/andreygrechin/gitree/actions/workflows/release.yml/badge.svg)](https://github.com/andreygrechin/gitree/actions/workflows/release.yml)
+[![Gitleaks](https://github.com/andreygrechin/gitree/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/andreygrechin/gitree/actions/workflows/gitleaks.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/andreygrechin/gitree/badge)](https://scorecard.dev/viewer/?uri=github.com/andreygrechin/gitree)
+
 A CLI tool that recursively scans directories for Git repositories and displays them in a tree structure with inline status information.
 
 ## About

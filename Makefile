@@ -54,6 +54,9 @@ cov-unit:
 test:
 	go test ./...
 
+test-race:
+	go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
 check_clean:
 	@if [ -n "$(shell git status --porcelain)" ]; then \
 		echo "Error: Dirty working tree. Commit or stash changes before proceeding."; \

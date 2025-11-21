@@ -19,8 +19,13 @@ on:
       - Makefile
       - .golangci.yaml
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   golang-security:
+    timeout-minutes: 10
     uses: andreygrechin/github-actions/.github/workflows/golang-security.yml@main
     permissions:
       contents: read
@@ -29,6 +34,7 @@ jobs:
       go-version: "1.25.x"
 
   lint:
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: read
@@ -61,12 +67,14 @@ jobs:
           args: --show-stats
 
   build:
+    timeout-minutes: 15
     permissions:
       contents: read
       pull-requests: read
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest]
         go-version: ["1.25.x"]
     steps:
       - uses: actions/checkout@v4
