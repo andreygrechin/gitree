@@ -62,6 +62,30 @@ archives:
           group: root
           mtime: "{{ .CommitDate }}"
 
+homebrew_casks:
+  - url:
+      template: "https://github.com/andreygrechin/gitree/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
+    commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
+    directory: Casks
+    caveats: |
+      As part of the installation process, brew will automatically run the following command
+      to remove the quarantine attribute:
+        /usr/bin/xattr -dr com.apple.quarantine .../gitree
+    homepage: "https://github.com/andreygrechin/gitree"
+    description: "A CLI tool that scans directories for Git repos and displays them in a tree format with status information."
+    license: "MIT"
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/gitree"]
+          end
+    skip_upload: auto
+    repository:
+      owner: andreygrechin
+      name: homebrew-tap
+      branch: main
+
 sboms:
   - artifacts: archive
 
