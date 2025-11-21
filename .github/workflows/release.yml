@@ -100,7 +100,7 @@ jobs:
           echo "Running pre-release validation..."
           make lint
           make test
-          make vuln
+          make security
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
