@@ -27,9 +27,9 @@ builds:
     ldflags:
       - -s
       - -w
-      - -X main.Version={{ .Version }}
-      - -X main.Commit={{ .Commit }}
-      - -X main.BuildTime={{ .Date }}
+      - -X main.version={{ .Version }}
+      - -X main.commit={{ .Commit }}
+      - -X main.buildTime={{ .Date }}
     main: ./cmd/gitree
     binary: ./cmd/gitree
     ignore:
