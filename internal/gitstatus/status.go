@@ -374,6 +374,24 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, o
 	// Use OS filesystem (root "/") because core.excludesfile in ~/.gitconfig
 	// could point to an absolute path anywhere on the filesystem
 	osFS := osfs.New("/")
+
+	// Debug: check what LoadGlobalPatterns will try to access
+	if opts != nil && opts.Debug {
+		homeDir, homeErr := os.UserHomeDir()
+		if homeErr == nil {
+			debugPrintf("User home directory: %s", homeDir)
+			gitconfigPath := osFS.Join(homeDir, ".gitconfig")
+			debugPrintf("Looking for .gitconfig at: %s", gitconfigPath)
+			if stat, err := osFS.Stat(gitconfigPath); err == nil {
+				debugPrintf(".gitconfig found (size: %d bytes)", stat.Size())
+			} else {
+				debugPrintf(".gitconfig not found or inaccessible: %v", err)
+			}
+		} else {
+			debugPrintf("Failed to get home directory: %v", homeErr)
+		}
+	}
+
 	globalPatterns, err := gitignore.LoadGlobalPatterns(osFS)
 	if err == nil {
 		if opts != nil && opts.Debug {
