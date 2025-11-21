@@ -37,14 +37,14 @@ go test -run TestName ./internal/scanner  # Run specific test
 make lint               # Format code and run all linters (includes fmt, go vet, staticcheck, golangci-lint)
 make format             # Format code with gofumpt and auto-fix some issues
 make fmt                # Alias for format
-make vuln               # Run security checks (gosec, govulncheck)
+make security           # Run security checks (gosec, govulncheck)
 ```
 
 ### Coverage
 
 ```bash
-make cov-unit           # Generate unit test coverage report (outputs to covdatafiles/)
-make cov-integration    # Generate integration coverage with instrumented binary
+make test-coverage         # Generate unit test coverage report (outputs to ./coverage/)
+make test-coverage-report  # Generate HTML coverage report
 ```
 
 ### Release
