@@ -15,8 +15,8 @@ jobs:
         github.event.pull_request.author_association == 'OWNER' ||
         github.event.pull_request.author_association == 'MEMBER'
       ) &&
-        github.repository_owner == 'andreygrechin' &&
-        github.event.repository.fork == false
+      github.repository_owner == 'andreygrechin' &&
+      github.event.repository.fork == false
     runs-on: ubuntu-latest
     permissions:
       contents: read
