@@ -371,18 +371,14 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, o
 	}
 
 	// Load global gitignore patterns to align with native git behavior
-	// Use OS filesystem to access user's home directory and global gitignore
+	// Use OS filesystem (root "/") because core.excludesfile in ~/.gitconfig
+	// could point to an absolute path anywhere on the filesystem
 	osFS := osfs.New("/")
 	globalPatterns, err := gitignore.LoadGlobalPatterns(osFS)
 	if err == nil {
 		worktree.Excludes = append(worktree.Excludes, globalPatterns...)
 	}
-
-	// Load system gitignore patterns
-	systemPatterns, err := gitignore.LoadSystemPatterns(osFS)
-	if err == nil {
-		worktree.Excludes = append(worktree.Excludes, systemPatterns...)
-	}
+	// Note: We skip LoadSystemPatterns() as it requires /etc access and is rarely used
 
 	wtStatus, err := worktree.Status()
 	if err != nil {
