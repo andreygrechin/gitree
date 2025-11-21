@@ -38,6 +38,28 @@ Example output:
 
 ## Installation
 
+### Homebrew (macOS)
+
+The easiest way to install on macOS is using Homebrew:
+
+```bash
+brew install --cask andreygrechin/tap/gitree
+```
+
+<details>
+<summary>Upgrade/Uninstall</summary>
+
+**Upgrade:**
+```bash
+brew upgrade --cask gitree
+```
+
+**Uninstall:**
+```bash
+brew uninstall --cask gitree
+```
+</details>
+
 ### Pre-built Binaries
 
 Download the latest release binaries from the [releases page](https://github.com/andreygrechin/gitree/releases) and follow the best practices for your OS to install them.
