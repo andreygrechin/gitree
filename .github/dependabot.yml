@@ -10,7 +10,6 @@ updates:
     open-pull-requests-limit: 1
     labels:
       - dependencies
-      - dependabot
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -18,7 +17,6 @@ updates:
     open-pull-requests-limit: 1
     labels:
       - dependencies
-      - dependabot
     commit-message:
       prefix: chore
       include: scope
