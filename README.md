@@ -41,10 +41,10 @@ Example output:
 - `*` - has uncommitted changes
 - `bare` - bare repository
 
+## Installation
+
 > [!WARNING]
 > Windows is not currently supported. This tool is designed for Linux and macOS.
-
-## Installation
 
 ### Homebrew (macOS)
 
@@ -133,8 +133,23 @@ make build              # Build binary to bin/gitree
 
 Run from any directory to scan for Git repositories:
 
-```bash
-./bin/gitree
+```shell
+$ ./bin/gitree -h
+gitree scans the current directory and its subdirectories for Git repositories,
+displays them in a tree structure with status information.
+
+By default, only repositories needing attention are shown (uncommitted changes,
+non-main/master branches, ahead/behind remote, stashes, or no remote tracking).
+Use --all to show all repositories including clean ones.
+
+Usage:
+  gitree [flags]
+
+Flags:
+  -a, --all        Show all repositories including clean ones (default shows only repos needing attention)
+  -h, --help       help for gitree
+      --no-color   Disable color output
+  -v, --version    Display version information
 ```
 
 The tool will recursively scan the current directory and display all Git repositories in a tree format with their status.
