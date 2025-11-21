@@ -35,6 +35,12 @@ const (
 	thresholdSlowOperation = 100 * time.Millisecond
 )
 
+// debugPrintf formats the message using fmt.Sprintf, adds a "DEBUG: " prefix, and outputs it to stderr.
+func debugPrintf(format string, args ...any) {
+	message := fmt.Sprintf(format, args...)
+	fmt.Fprintf(os.Stderr, "DEBUG: %s\n", message)
+}
+
 // DefaultOptions returns sensible default options.
 func DefaultOptions() *ExtractOptions {
 	return &ExtractOptions{
@@ -153,7 +159,7 @@ func printDebugSummary(repoPath string, status *models.GitStatus, startTime time
 	// Timing (only if >100ms)
 	duration := time.Since(startTime)
 	if duration > thresholdSlowOperation {
-		fmt.Fprintf(os.Stderr, "DEBUG: Repository %s status extraction: %dms\n", repoPath, duration.Milliseconds())
+		debugPrintf("Repository %s status extraction: %dms", repoPath, duration.Milliseconds())
 	}
 
 	// Status summary
@@ -174,7 +180,7 @@ func printDebugSummary(repoPath string, status *models.GitStatus, startTime time
 		statusParts = append(statusParts, "hasStashes=true")
 	}
 
-	fmt.Fprintf(os.Stderr, "DEBUG: Repository %s: %s\n", repoPath, strings.Join(statusParts, ", "))
+	debugPrintf("Repository %s: %s", repoPath, strings.Join(statusParts, ", "))
 }
 
 // extractBranch extracts the current branch name and detached HEAD status.
@@ -340,10 +346,10 @@ func categorizeAndPrintFiles(wtStatus git.Status) {
 			return
 		}
 		if len(files) <= maxFilesPerCategory {
-			fmt.Fprintf(os.Stderr, "DEBUG: %s files (%d): %s\n", category, len(files), strings.Join(files, ", "))
+			debugPrintf("%s files (%d): %s", category, len(files), strings.Join(files, ", "))
 		} else {
-			fmt.Fprintf(os.Stderr, "DEBUG: %s files (%d): %s\n", category, len(files), strings.Join(files[:maxFilesPerCategory], ", "))
-			fmt.Fprintf(os.Stderr, "DEBUG: ...and %d more %s files\n", len(files)-maxFilesPerCategory, strings.ToLower(category))
+			debugPrintf("%s files (%d): %s", category, len(files), strings.Join(files[:maxFilesPerCategory], ", "))
+			debugPrintf("...and %d more %s files", len(files)-maxFilesPerCategory, strings.ToLower(category))
 		}
 	}
 
