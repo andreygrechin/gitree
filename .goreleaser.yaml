@@ -66,6 +66,7 @@ homebrew_casks:
   - url:
       template: "https://github.com/andreygrechin/gitree/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
+    binary: cmd/gitree
     directory: Casks
     caveats: |
       As part of the installation process, brew will automatically run the following command
@@ -78,7 +79,7 @@ homebrew_casks:
       post:
         install: |
           if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/gitree"]
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/cmd/gitree"]
           end
     skip_upload: auto
     repository:
