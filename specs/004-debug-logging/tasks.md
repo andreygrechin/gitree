@@ -26,10 +26,10 @@ Gitree uses standard Go single-project layout:
 
 **Purpose**: Add infrastructure for debug flag passing through the application
 
-- [ ] T001 [P] Add Debug field to ScanOptions struct in internal/scanner/scanner.go
-- [ ] T002 [P] Add Debug field to ExtractOptions struct in internal/gitstatus/status.go
-- [ ] T003 [P] Add debugPrintf helper function in internal/scanner/scanner.go
-- [ ] T004 [P] Add debugPrintf helper function in internal/gitstatus/status.go
+- [x] T001 [P] Add Debug field to ScanOptions struct in internal/scanner/scanner.go
+- [x] T002 [P] Add Debug field to ExtractOptions struct in internal/gitstatus/status.go
+- [x] T003 [P] Add debugPrintf helper function in internal/scanner/scanner.go
+- [x] T004 [P] Add debugPrintf helper function in internal/gitstatus/status.go
 
 ---
 
@@ -39,10 +39,10 @@ Gitree uses standard Go single-project layout:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 Add debugFlag variable in cmd/gitree/root.go alongside existing flags
-- [ ] T006 Add debug flag definition in cmd/gitree/root.go init() function
-- [ ] T007 Pass debug flag to ScanOptions in cmd/gitree/root.go runGitree() function
-- [ ] T008 Pass debug flag to ExtractOptions in cmd/gitree/root.go runGitree() function
+- [x] T005 Add debugFlag variable in cmd/gitree/root.go alongside existing flags
+- [x] T006 Add debug flag definition in cmd/gitree/root.go init() function
+- [x] T007 Pass debug flag to ScanOptions in cmd/gitree/root.go runGitree() function
+- [x] T008 Pass debug flag to ExtractOptions in cmd/gitree/root.go runGitree() function
 
 **Checkpoint**: Debug flag infrastructure ready - user story implementation can now begin in parallel
 
@@ -67,9 +67,9 @@ Gitree uses standard Go single-project layout:
 
 ### Implementation for User Story 3
 
-- [ ] T014 [US3] Modify scanner struct to store full ScanOptions (not just rootPath) in internal/scanner/scanner.go
-- [ ] T015 [US3] Update scanner.Scan() function to pass opts to scanner struct in internal/scanner/scanner.go
-- [ ] T016 [US3] Conditionally disable spinner start/stop when debugFlag is true in cmd/gitree/root.go (3 locations: line ~126, ~155, ~183)
+- [x] T014 [US3] Modify scanner struct to store full ScanOptions (not just rootPath) in internal/scanner/scanner.go
+- [x] T015 [US3] Update scanner.Scan() function to pass opts to scanner struct in internal/scanner/scanner.go
+- [x] T016 [US3] Conditionally disable spinner start/stop when debugFlag is true in cmd/gitree/root.go (3 locations: line ~126, ~155, ~183)
 
 **Checkpoint**: At this point, --debug flag is functional, appears in help, controls debug output, and disables spinner
 
@@ -95,16 +95,16 @@ Gitree uses standard Go single-project layout:
 
 ### Implementation for User Story 2
 
-- [ ] T023 [P] [US2] Add debug output for entering directory in scanner.walkFunc() in internal/scanner/scanner.go
-- [ ] T024 [P] [US2] Add debug output for permission denied in scanner.walkFunc() in internal/scanner/scanner.go
-- [ ] T025 [P] [US2] Add debug output for symlink errors in scanner.walkFunc() in internal/scanner/scanner.go
-- [ ] T026 [P] [US2] Add debug output for already visited (symlink loop) in scanner.walkFunc() in internal/scanner/scanner.go
-- [ ] T027 [P] [US2] Add debug output for repo detection with type (regular/bare) in scanner.walkFunc() in internal/scanner/scanner.go
-- [ ] T028 [P] [US2] Add debug output for skipping repo contents in scanner.walkFunc() in internal/scanner/scanner.go
-- [ ] T029 [US2] Add timing measurement in extractGitStatus() in internal/gitstatus/status.go
-- [ ] T030 [US2] Add debug output for timing if >100ms in extractGitStatus() in internal/gitstatus/status.go
-- [ ] T031 [US2] Update extractGitStatus() function signature to accept opts parameter in internal/gitstatus/status.go
-- [ ] T032 [US2] Update Extract() function to pass opts to extractGitStatus() in internal/gitstatus/status.go
+- [x] T023 [P] [US2] Add debug output for entering directory in scanner.walkFunc() in internal/scanner/scanner.go
+- [x] T024 [P] [US2] Add debug output for permission denied in scanner.walkFunc() in internal/scanner/scanner.go
+- [x] T025 [P] [US2] Add debug output for symlink errors in scanner.walkFunc() in internal/scanner/scanner.go
+- [x] T026 [P] [US2] Add debug output for already visited (symlink loop) in scanner.walkFunc() in internal/scanner/scanner.go
+- [x] T027 [P] [US2] Add debug output for repo detection with type (regular/bare) in scanner.walkFunc() in internal/scanner/scanner.go
+- [x] T028 [P] [US2] Add debug output for skipping repo contents in scanner.walkFunc() in internal/scanner/scanner.go
+- [x] T029 [US2] Add timing measurement in extractGitStatus() in internal/gitstatus/status.go
+- [x] T030 [US2] Add debug output for timing if >100ms in extractGitStatus() in internal/gitstatus/status.go
+- [x] T031 [US2] Update extractGitStatus() function signature to accept opts parameter in internal/gitstatus/status.go
+- [x] T032 [US2] Update Extract() function to pass opts to extractGitStatus() in internal/gitstatus/status.go
 
 **Checkpoint**: At this point, User Story 2 should show all directory scanning decisions and timing info
 
@@ -132,12 +132,12 @@ Gitree uses standard Go single-project layout:
 
 ### Implementation for User Story 1
 
-- [ ] T041 [US1] Add debug output for status summary (branch, hasChanges, hasRemote, ahead, behind, hasStashes) in extractGitStatus() in internal/gitstatus/status.go
-- [ ] T042 [US1] Add file categorization logic in extractUncommittedChanges() (Modified, Untracked, Staged, Deleted) in internal/gitstatus/status.go
-- [ ] T043 [US1] Add printFileList helper function with 20-file truncation in internal/gitstatus/status.go
-- [ ] T044 [US1] Add debug output for file lists per category in extractUncommittedChanges() in internal/gitstatus/status.go
-- [ ] T045 [US1] Update extractUncommittedChanges() function signature to accept opts parameter in internal/gitstatus/status.go
-- [ ] T046 [US1] Update extractGitStatus() to pass opts to extractUncommittedChanges() in internal/gitstatus/status.go
+- [x] T041 [US1] Add debug output for status summary (branch, hasChanges, hasRemote, ahead, behind, hasStashes) in extractGitStatus() in internal/gitstatus/status.go
+- [x] T042 [US1] Add file categorization logic in extractUncommittedChanges() (Modified, Untracked, Staged, Deleted) in internal/gitstatus/status.go
+- [x] T043 [US1] Add printFileList helper function with 20-file truncation in internal/gitstatus/status.go
+- [x] T044 [US1] Add debug output for file lists per category in extractUncommittedChanges() in internal/gitstatus/status.go
+- [x] T045 [US1] Update extractUncommittedChanges() function signature to accept opts parameter in internal/gitstatus/status.go
+- [x] T046 [US1] Update extractGitStatus() to pass opts to extractUncommittedChanges() in internal/gitstatus/status.go
 
 **Checkpoint**: All user stories should now be independently functional - complete debug logging feature
 

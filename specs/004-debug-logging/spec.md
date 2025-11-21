@@ -2,7 +2,7 @@
 
 **Feature Branch**: `004-debug-logging`
 **Created**: 2025-11-21
-**Status**: Draft
+**Status**: Implemented
 **Input**: User description: "I want to add a flag to enable output of debug information. For example, some directories are marked as having non-clear worktree status. It's not clear why, which makes troubleshooting is very difficult. Use one level of debug logs. Stick with using fmt.Fprintln/fmt.Fprint, no need for structural logging."
 
 ## User Scenarios & Testing *(mandatory)*
