@@ -55,9 +55,9 @@ jobs:
           version: latest
 
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.1.6
+          version: v2.6.2
           args: --show-stats
 
   build:
@@ -78,12 +78,10 @@ jobs:
 
       - name: Install dependencies
         run: |
-          go get .
-
+          go mod download
       - name: Build
         run: |
           make build
-
       - name: Test
         run: go test -coverprofile=coverage.txt -v ./...
 
