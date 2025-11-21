@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -21,12 +23,23 @@ type ExtractOptions struct {
 
 	// MaxConcurrency limits the number of repositories processed concurrently in ExtractBatch
 	MaxConcurrency int
+
+	// Debug enables debug output for status extraction operations
+	Debug bool
 }
 
 const (
-	defaultExtractTimeout = 10 * time.Second
-	defaultMaxConcurrency = 10
+	defaultExtractTimeout  = 10 * time.Second
+	defaultMaxConcurrency  = 10
+	maxFilesPerCategory    = 20
+	thresholdSlowOperation = 100 * time.Millisecond
 )
+
+// debugPrintf formats the message using fmt.Sprintf, adds a "DEBUG: " prefix, and outputs it to stderr.
+func debugPrintf(format string, args ...any) {
+	message := fmt.Sprintf(format, args...)
+	fmt.Fprintf(os.Stderr, "DEBUG: %s\n", message)
+}
 
 // DefaultOptions returns sensible default options.
 func DefaultOptions() *ExtractOptions {
@@ -54,7 +67,7 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*model
 	errorChan := make(chan error, 1)
 
 	go func() {
-		status, err := extractGitStatus(repoPath)
+		status, err := extractGitStatus(repoPath, opts)
 		if err != nil {
 			errorChan <- err
 
@@ -87,7 +100,9 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*model
 }
 
 // extractGitStatus performs the actual Git status extraction.
-func extractGitStatus(repoPath string) (*models.GitStatus, error) {
+func extractGitStatus(repoPath string, opts *ExtractOptions) (*models.GitStatus, error) {
+	startTime := time.Now()
+
 	// Open repository
 	repo, err := git.PlainOpen(repoPath)
 	if err != nil {
@@ -122,7 +137,7 @@ func extractGitStatus(repoPath string) (*models.GitStatus, error) {
 	status.HasStashes = extractStashes(repo)
 
 	// Check for uncommitted changes
-	if err := extractUncommittedChanges(repo, status); err != nil {
+	if err := extractUncommittedChanges(repo, status, opts); err != nil {
 		// Non-fatal for bare repos
 		if !errors.Is(err, git.ErrIsBareRepository) {
 			if status.Error == "" {
@@ -131,7 +146,41 @@ func extractGitStatus(repoPath string) (*models.GitStatus, error) {
 		}
 	}
 
+	// Debug output
+	if opts != nil && opts.Debug {
+		printDebugSummary(repoPath, status, startTime)
+	}
+
 	return status, nil
+}
+
+// printDebugSummary prints debug timing and status summary.
+func printDebugSummary(repoPath string, status *models.GitStatus, startTime time.Time) {
+	// Timing (only if >100ms)
+	duration := time.Since(startTime)
+	if duration > thresholdSlowOperation {
+		debugPrintf("Repository %s status extraction: %dms", repoPath, duration.Milliseconds())
+	}
+
+	// Status summary
+	statusParts := []string{"branch=" + status.Branch}
+	statusParts = append(statusParts, fmt.Sprintf("hasChanges=%t", status.HasChanges))
+	if status.HasRemote {
+		statusParts = append(statusParts, "hasRemote=true")
+		if status.Ahead > 0 {
+			statusParts = append(statusParts, fmt.Sprintf("ahead=%d", status.Ahead))
+		}
+		if status.Behind > 0 {
+			statusParts = append(statusParts, fmt.Sprintf("behind=%d", status.Behind))
+		}
+	} else {
+		statusParts = append(statusParts, "hasRemote=false")
+	}
+	if status.HasStashes {
+		statusParts = append(statusParts, "hasStashes=true")
+	}
+
+	debugPrintf("Repository %s: %s", repoPath, strings.Join(statusParts, ", "))
 }
 
 // extractBranch extracts the current branch name and detached HEAD status.
@@ -272,8 +321,46 @@ func extractStashes(repo *git.Repository) bool {
 	return stashRef != nil
 }
 
+// categorizeAndPrintFiles categorizes and prints files with truncation.
+func categorizeAndPrintFiles(wtStatus git.Status) {
+	modifiedFiles := []string{}
+	untrackedFiles := []string{}
+	stagedFiles := []string{}
+	deletedFiles := []string{}
+
+	for filename, fileStatus := range wtStatus {
+		switch {
+		case fileStatus.Worktree == git.Modified && fileStatus.Staging == git.Unmodified:
+			modifiedFiles = append(modifiedFiles, filename)
+		case fileStatus.Staging == git.Untracked && fileStatus.Worktree == git.Untracked:
+			untrackedFiles = append(untrackedFiles, filename)
+		case fileStatus.Staging != git.Unmodified && fileStatus.Staging != git.Untracked:
+			stagedFiles = append(stagedFiles, filename)
+		case fileStatus.Worktree == git.Deleted:
+			deletedFiles = append(deletedFiles, filename)
+		}
+	}
+
+	printFileList := func(category string, files []string) {
+		if len(files) == 0 {
+			return
+		}
+		if len(files) <= maxFilesPerCategory {
+			debugPrintf("%s files (%d): %s", category, len(files), strings.Join(files, ", "))
+		} else {
+			debugPrintf("%s files (%d): %s", category, len(files), strings.Join(files[:maxFilesPerCategory], ", "))
+			debugPrintf("...and %d more %s files", len(files)-maxFilesPerCategory, strings.ToLower(category))
+		}
+	}
+
+	printFileList("Modified", modifiedFiles)
+	printFileList("Untracked", untrackedFiles)
+	printFileList("Staged", stagedFiles)
+	printFileList("Deleted", deletedFiles)
+}
+
 // extractUncommittedChanges checks for uncommitted changes in the working tree.
-func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus) error {
+func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, opts *ExtractOptions) error {
 	worktree, err := repo.Worktree()
 	if err != nil {
 		// Likely a bare repository
@@ -300,6 +387,11 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus) e
 	}
 
 	status.HasChanges = !wtStatus.IsClean()
+
+	// Debug file listing
+	if opts != nil && opts.Debug && status.HasChanges {
+		categorizeAndPrintFiles(wtStatus)
+	}
 
 	return nil
 }

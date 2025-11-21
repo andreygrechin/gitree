@@ -139,9 +139,14 @@ make clean              # Remove build artifacts and caches
 
 ## Active Technologies
 
-- Go 1.25.4 (003-cobra-cli-flags)
-- N/A (CLI tool reads git repositories from filesystem) (003-cobra-cli-flags)
+- Go 1.25+
+- cobra (github.com/spf13/cobra) – CLI framework
+- go-git (github.com/go-git/go-git/v5) – Pure Go Git implementation
+- fatih/color (github.com/fatih/color) – Terminal color output
+- briandowns/spinner (github.com/briandowns/spinner) – Terminal spinner for progress indication
 
 ## Recent Changes
 
-- 003-cobra-cli-flags: Added Go 1.25.4
+- 004-debug-logging: Added debug logging support with --debug flag
+- 003-cobra-cli-flags: Added filtering flags to CLI using cobra
+- 002-colorized-status-output: Enhanced status output with color coding

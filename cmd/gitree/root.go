@@ -30,6 +30,7 @@ var (
 	versionFlag bool
 	noColorFlag bool
 	allFlag     bool
+	debugFlag   bool
 
 	// Root command.
 	rootCmd = &cobra.Command{
@@ -60,6 +61,7 @@ func init() { //nolint:gochecknoinits // Cobra CLI initialization
 	rootCmd.Flags().BoolVar(&noColorFlag, "no-color", false, "Disable color output")
 	rootCmd.Flags().BoolVarP(&allFlag, "all", "a", false,
 		"Show all repositories including clean ones (default shows only repos needing attention)")
+	rootCmd.Flags().BoolVar(&debugFlag, "debug", false, "Enable debug output")
 
 	// Set PersistentPreRun to handle global flags (color suppression)
 	rootCmd.PersistentPreRun = handleGlobalFlags
@@ -110,7 +112,10 @@ func runGitree(_ *cobra.Command, _ []string) error {
 	s := spinner.New(spinner.CharSets[spinnerChar], spinnerDelay)
 	s.Suffix = " Scanning repositories..."
 	s.Writer = os.Stderr
-	s.Start()
+	// Only start spinner if debug is disabled
+	if !debugFlag {
+		s.Start()
+	}
 
 	// Create context with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), defaultContextTimeout)
@@ -119,17 +124,22 @@ func runGitree(_ *cobra.Command, _ []string) error {
 	// Scan for repositories
 	scanOpts := scanner.ScanOptions{
 		RootPath: cwd,
+		Debug:    debugFlag,
 	}
 	scanResult, err := scanner.Scan(ctx, scanOpts)
 	if err != nil {
-		s.Stop()
+		if !debugFlag {
+			s.Stop()
+		}
 
 		return fmt.Errorf("failed to scan directory: %w", err)
 	}
 
 	// Check if any repositories were found
 	if len(scanResult.Repositories) == 0 {
-		s.Stop()
+		if !debugFlag {
+			s.Stop()
+		}
 		_, _ = fmt.Fprintln(os.Stdout, "No Git repositories found in this directory.")
 
 		return nil
@@ -148,10 +158,13 @@ func runGitree(_ *cobra.Command, _ []string) error {
 	statusOpts := &gitstatus.ExtractOptions{
 		Timeout:        defaultTimeout,
 		MaxConcurrency: maxConcurrentRequests,
+		Debug:          debugFlag,
 	}
 	statuses, err := gitstatus.ExtractBatch(ctx, repoMap, statusOpts)
 	if err != nil {
-		s.Stop()
+		if !debugFlag {
+			s.Stop()
+		}
 		fmt.Fprintf(os.Stderr, "Warning: Some repositories failed status extraction: %v\n", err)
 		// Continue anyway with partial results
 	}
@@ -169,7 +182,9 @@ func runGitree(_ *cobra.Command, _ []string) error {
 
 	// Check if all repos were filtered out (all clean in default mode)
 	if len(filteredRepos) == 0 && !allFlag {
-		s.Stop()
+		if !debugFlag {
+			s.Stop()
+		}
 		_, _ = fmt.Fprintln(os.Stdout, "All repositories are in clean state (on main/master, in sync with remote, no changes).")
 		_, _ = fmt.Fprintln(os.Stdout, "Use --all flag to show all repositories including clean ones.")
 
@@ -180,7 +195,9 @@ func runGitree(_ *cobra.Command, _ []string) error {
 	root := tree.Build(cwd, filteredRepos, nil)
 
 	// Stop spinner before output
-	s.Stop()
+	if !debugFlag {
+		s.Stop()
+	}
 
 	// Format and print tree
 	output := tree.Format(root, nil)
