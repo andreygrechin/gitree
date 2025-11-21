@@ -33,44 +33,44 @@ jobs:
           cache: true
 
       - name: Run benchmarks on current ref
-        run:
-          - echo "Running benchmarks on ${{ github.ref_name }}..."
-          - go test -bench=. -benchmem -benchtime=5s -count=5 ./... | tee benchmark-current.txt
+        run: |
+          echo "Running benchmarks on ${{ github.ref_name }}..."
+          go test -bench=. -benchmem -benchtime=5s -count=5 ./... | tee benchmark-current.txt
 
       - name: Run benchmarks on comparison ref
         if: inputs.compare_ref != ''
-        run:
-          - echo "Checking out ${{ inputs.compare_ref }} for comparison..."
-          - git stash
-          - git checkout ${{ inputs.compare_ref }}
-          - echo "Running benchmarks on ${{ inputs.compare_ref }}..."
-          - go test -bench=. -benchmem -benchtime=5s -count=5 ./... | tee benchmark-compare.txt
-          - git checkout -
+        run: |
+          echo "Checking out ${{ inputs.compare_ref }} for comparison..."
+          git stash
+          git checkout ${{ inputs.compare_ref }}
+          echo "Running benchmarks on ${{ inputs.compare_ref }}..."
+          go test -bench=. -benchmem -benchtime=5s -count=5 ./... | tee benchmark-compare.txt
+          git checkout -
 
       - name: Install benchstat
         run: go install golang.org/x/perf/cmd/benchstat@latest
 
       - name: Compare benchmarks
         if: inputs.compare_ref != ''
-        run:
-          - echo "## Benchmark Comparison" >> $GITHUB_STEP_SUMMARY
-          - echo "" >> $GITHUB_STEP_SUMMARY
-          - echo "Comparing **${{ github.ref_name }}** vs **${{ inputs.compare_ref }}**" >> $GITHUB_STEP_SUMMARY
-          - echo "" >> $GITHUB_STEP_SUMMARY
-          - echo '```' >> $GITHUB_STEP_SUMMARY
-          - benchstat benchmark-compare.txt benchmark-current.txt | tee -a $GITHUB_STEP_SUMMARY
-          - echo '```' >> $GITHUB_STEP_SUMMARY
+        run: |
+          echo "## Benchmark Comparison" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Comparing **${{ github.ref_name }}** vs **${{ inputs.compare_ref }}**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          benchstat benchmark-compare.txt benchmark-current.txt | tee -a $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Show current benchmarks
         if: inputs.compare_ref == ''
-        run:
-          - echo "## Benchmark Results" >> $GITHUB_STEP_SUMMARY
-          - echo "" >> $GITHUB_STEP_SUMMARY
-          - echo "Results for **${{ github.ref_name }}**" >> $GITHUB_STEP_SUMMARY
-          - echo "" >> $GITHUB_STEP_SUMMARY
-          - echo '```' >> $GITHUB_STEP_SUMMARY
-          - cat benchmark-current.txt >> $GITHUB_STEP_SUMMARY
-          - echo '```' >> $GITHUB_STEP_SUMMARY
+        run: |
+          echo "## Benchmark Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Results for **${{ github.ref_name }}**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat benchmark-current.txt >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload benchmark results
         uses: actions/upload-artifact@v4
