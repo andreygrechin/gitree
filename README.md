@@ -42,7 +42,7 @@ Example output:
 - `bare` - bare repository
 
 > [!WARNING]
-> Windows is not currently supported. This tool is designed for Unix-like operating systems (Linux, macOS, BSD).
+> Windows is not currently supported. This tool is designed for Linux and macOS.
 
 ## Installation
 
