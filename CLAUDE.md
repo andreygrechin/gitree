@@ -139,7 +139,11 @@ make clean              # Remove build artifacts and caches
 
 ## Active Technologies
 
-- N/A
+- Go 1.25+
+- cobra (github.com/spf13/cobra) – CLI framework
+- go-git (github.com/go-git/go-git/v5) – Pure Go Git implementation
+- fatih/color (github.com/fatih/color) – Terminal color output
+- briandowns/spinner (github.com/briandowns/spinner) – Terminal spinner for progress indication
 
 ## Recent Changes
 
