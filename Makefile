@@ -6,7 +6,7 @@ COMMIT     := $(shell git rev-parse --short HEAD)
 BUILDTIME  := $(shell date -u '+%Y-%m-%dT%H:%M:%SZ')
 MOD_PATH   := $(shell go list -m)
 APP_NAME   := gitree
-GOCOVERDIR := ./covdatafiles
+GOCOVERDIR := ./coverage
 
 # Build targets
 all: lint test build
