@@ -11,3 +11,4 @@ line-length: false
 no-emphasis-as-heading: false
 first-line-heading: false
 no-duplicate-heading: false
+fenced-code-language: false
