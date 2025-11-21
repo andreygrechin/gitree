@@ -1,10 +1,12 @@
 package gitstatus
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -322,6 +324,40 @@ func extractStashes(repo *git.Repository) bool {
 	return stashRef != nil
 }
 
+// readGitignoreFile reads a gitignore file directly and returns patterns.
+func readGitignoreFile(path string) ([]gitignore.Pattern, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	var patterns []gitignore.Pattern
+	scanner := bufio.NewScanner(file)
+	lineNum := 0
+
+	for scanner.Scan() {
+		lineNum++
+		line := scanner.Text()
+
+		// Skip empty lines and comments
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+
+		// Create a pattern
+		pattern := gitignore.ParsePattern(line, nil)
+		patterns = append(patterns, pattern)
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	return patterns, nil
+}
+
 // categorizeAndPrintFiles categorizes and prints files with truncation.
 func categorizeAndPrintFiles(wtStatus git.Status) {
 	modifiedFiles := []string{}
@@ -380,7 +416,7 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, o
 		homeDir, homeErr := os.UserHomeDir()
 		if homeErr == nil {
 			debugPrintf("User home directory: %s", homeDir)
-			gitconfigPath := osFS.Join(homeDir, ".gitconfig")
+			gitconfigPath := filepath.Join(homeDir, ".gitconfig")
 			debugPrintf("Looking for .gitconfig at: %s", gitconfigPath)
 			if stat, err := osFS.Stat(gitconfigPath); err == nil {
 				debugPrintf(".gitconfig found (size: %d bytes)", stat.Size())
@@ -391,9 +427,9 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, o
 			// Check default global ignore locations
 			xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
 			if xdgConfigHome == "" {
-				xdgConfigHome = osFS.Join(homeDir, ".config")
+				xdgConfigHome = filepath.Join(homeDir, ".config")
 			}
-			defaultIgnorePath := osFS.Join(xdgConfigHome, "git", "ignore")
+			defaultIgnorePath := filepath.Join(xdgConfigHome, "git", "ignore")
 			debugPrintf("Checking default global ignore at: %s", defaultIgnorePath)
 			if stat, err := osFS.Stat(defaultIgnorePath); err == nil {
 				debugPrintf("Default global ignore found (size: %d bytes)", stat.Size())
@@ -424,12 +460,12 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, o
 		if err == nil {
 			xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
 			if xdgConfigHome == "" {
-				xdgConfigHome = osFS.Join(homeDir, ".config")
+				xdgConfigHome = filepath.Join(homeDir, ".config")
 			}
-			defaultIgnorePath := osFS.Join(xdgConfigHome, "git", "ignore")
+			defaultIgnorePath := filepath.Join(xdgConfigHome, "git", "ignore")
 
-			// Try to read the default ignore file
-			defaultPatterns, err := gitignore.ReadPatterns(osFS, []string{defaultIgnorePath})
+			// Try to read the default ignore file directly
+			defaultPatterns, err := readGitignoreFile(defaultIgnorePath)
 			if err == nil && len(defaultPatterns) > 0 {
 				if opts != nil && opts.Debug {
 					debugPrintf("Loaded %d patterns from default global ignore: %s", len(defaultPatterns), defaultIgnorePath)
