@@ -56,14 +56,17 @@ brew install --cask gitree
 <summary>Upgrade/Uninstall</summary>
 
 **Upgrade:**
+
 ```bash
 brew upgrade --cask gitree
 ```
 
 **Uninstall:**
+
 ```bash
 brew uninstall --cask gitree
 ```
+
 </details>
 
 ### Pre-built Binaries
@@ -79,6 +82,7 @@ go install github.com/andreygrechin/gitree/cmd/gitree@latest
 ```
 
 Installs to `$GOPATH/bin/gitree` (typically `$HOME/go/bin/gitree`). Ensure `$GOPATH/bin` is in your PATH:
+
 ```bash
 export PATH="$PATH:$(go env GOPATH)/bin"
 ```
@@ -87,9 +91,11 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 <summary>Install a specific version</summary>
 
 Use the version tag instead of `@latest`:
+
 ```bash
 go install github.com/andreygrechin/gitree/cmd/gitree@v1.0.0
 ```
+
 </details>
 
 <details>
@@ -98,9 +104,11 @@ go install github.com/andreygrechin/gitree/cmd/gitree@v1.0.0
 **Upgrade:** Run the same command with `@latest` or a newer version tag.
 
 **Uninstall:**
+
 ```bash
 rm $(go env GOPATH)/bin/gitree
 ```
+
 </details>
 
 ### From Source
