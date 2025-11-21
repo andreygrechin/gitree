@@ -376,7 +376,17 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, o
 	osFS := osfs.New("/")
 	globalPatterns, err := gitignore.LoadGlobalPatterns(osFS)
 	if err == nil {
+		if opts != nil && opts.Debug {
+			debugPrintf("Loaded %d global gitignore patterns", len(globalPatterns))
+		}
 		worktree.Excludes = append(worktree.Excludes, globalPatterns...)
+		if opts != nil && opts.Debug {
+			debugPrintf("Total excludes after adding global patterns: %d", len(worktree.Excludes))
+		}
+	} else {
+		if opts != nil && opts.Debug {
+			debugPrintf("Failed to load global gitignore patterns: %v", err)
+		}
 	}
 	// Note: We skip LoadSystemPatterns() as it requires /etc access and is rarely used
 
