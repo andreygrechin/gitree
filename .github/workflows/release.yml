@@ -27,6 +27,8 @@ concurrency:
 jobs:
   # Validation job - runs first to ensure requirements are met
   validate:
+    permissions:
+      contents: read
     timeout-minutes: 5
     runs-on: ubuntu-latest
     outputs:
@@ -119,6 +121,8 @@ jobs:
 
   # Summary job - provides release information
   summary:
+    permissions:
+      contents: read
     timeout-minutes: 5
     needs: [validate, release]
     runs-on: ubuntu-latest
