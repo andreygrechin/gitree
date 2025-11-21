@@ -19,6 +19,7 @@
 			"goreleaser",
 			"inodes",
 			"objs",
+			"ossf",
 			"Println",
 			"refactorable",
 			"speckit",
