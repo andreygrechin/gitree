@@ -66,7 +66,7 @@ homebrew_casks:
   - url:
       template: "https://github.com/andreygrechin/gitree/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     commit_msg_template: "Brew cask update for {{ .ProjectName }} version {{ .Tag }}"
-    binary: cmd/gitree
+    binaries: [cmd/gitree]
     directory: Casks
     caveats: |
       As part of the installation process, brew will automatically run the following command
