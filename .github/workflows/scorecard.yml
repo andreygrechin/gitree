@@ -6,7 +6,7 @@ on:
   branch_protection_rule:
   # Weekly on Monday at 3 AM UTC
   schedule:
-    - cron: '0 3 * * 1'
+    - cron: '0 3 * * MON'
   push:
     branches: [main]
 
@@ -21,7 +21,7 @@ jobs:
   analysis:
     name: Scorecard analysis
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     permissions:
       # Needed to upload the results to code-scanning dashboard.
       security-events: write
