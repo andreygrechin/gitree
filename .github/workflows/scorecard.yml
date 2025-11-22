@@ -1,5 +1,5 @@
 ---
-name: Scorecard
+name: scorecard
 
 on:
   # For Branch-Protection check. Only the default branch is supported.
