@@ -2,23 +2,9 @@
 name: release
 
 on:
-  # Manual trigger for releases
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Tag to release (e.g., v1.2.3)'
-        required: true
-        type: string
-      draft:
-        description: 'Create as draft release'
-        required: false
-        type: boolean
-        default: true
-
-  # Automatic trigger on version tags
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 permissions: {}
 
@@ -27,114 +13,24 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Validation job - runs first to ensure requirements are met
-  validate:
-    permissions:
-      contents: read
-    timeout-minutes: 10
-    runs-on: ubuntu-latest
-    outputs:
-      version: ${{ steps.get-version.outputs.version }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
-        with:
-          fetch-depth: 0
-
-      - name: Get version from tag
-        id: get-version
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ inputs.tag }}"
-          else
-            VERSION="${GITHUB_REF#refs/tags/}"
-          fi
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "Releasing version: ${VERSION}"
-
-      - name: Validate version format
-        run: |
-          VERSION="${{ steps.get-version.outputs.version }}"
-          if [[ ! "${VERSION}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
-            echo "Error: Invalid version format '${VERSION}'. Expected format: v1.2.3 or v1.2.3-beta.1"
-            exit 1
-          fi
-
-      - name: Check if tag exists (for workflow_dispatch)
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          VERSION="${{ steps.get-version.outputs.version }}"
-          if git rev-parse "${VERSION}" >/dev/null 2>&1; then
-            echo "Error: Tag ${VERSION} already exists"
-            exit 1
-          fi
-
-  # Release job - builds and publishes the release
   release:
-    needs: validate
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
     permissions:
       contents: write
       id-token: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
         with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+          fetch-depth: 0 # this is important, otherwise it won't checkout the full tree (i.e. no previous tags)
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
-          go-version: '1.25.4'
-          cache: true
-
-      - name: Create tag for manual release
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "${{ inputs.tag }}" -m "Release ${{ inputs.tag }}"
-          git push origin "${{ inputs.tag }}"
-
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
+          go-version: stable
+      - uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
-          distribution: goreleaser
-          version: '~> v2'
-          args: release --clean ${{ (github.event_name == 'workflow_dispatch' && inputs.draft) && '--draft' || '' }}
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+      - uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3.0.0
         with:
-          name: dist
-          path: dist/
-          retention-days: 5
-
-  # Summary job - provides release information
-  summary:
-    permissions:
-      contents: read
-    timeout-minutes: 10
-    needs: [validate, release]
-    runs-on: ubuntu-latest
-    if: always()
-    steps:
-      - name: Release summary
-        run: |
-          echo "## Release Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: ${{ needs.validate.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Status**: ${{ needs.release.result }}" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ needs.release.result }}" = "success" ]; then
-            echo "✅ Release completed successfully!" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "View the release at: https://github.com/${{ github.repository }}/releases/tag/${{ needs.validate.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "❌ Release failed. Check the logs above for details." >> $GITHUB_STEP_SUMMARY
-          fi
+          subject-checksums: ./dist/checksums.txt

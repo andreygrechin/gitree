@@ -1,4 +1,4 @@
-.PHONY: all build format fmt lint vuln security test-coverage test-coverage-report test-race release check_clean clean help
+.PHONY: all build format fmt lint security test-coverage test-coverage-report test-race release check_clean clean help
 
 # Build variables
 VERSION    := $(shell git describe --tags --always --dirty)
@@ -29,11 +29,9 @@ lint: fmt
 	staticcheck ./...
 	golangci-lint run --show-stats
 
-vuln:
+security:
 	gosec ./...
 	govulncheck
-
-security: vuln
 
 test-coverage:
 	rm -fr "${GOCOVERDIR}" && mkdir -p "${GOCOVERDIR}"
@@ -56,11 +54,11 @@ check_clean:
 		exit 1; \
 	fi
 
-release-test: lint test vuln
+release-test: lint test security
 	goreleaser check
 	goreleaser release --snapshot --clean
 
-release: check_clean lint test vuln
+release: check_clean lint test security
 	goreleaser release --clean
 
 clean:
