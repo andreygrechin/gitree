@@ -4,6 +4,7 @@
 [![Release](https://github.com/andreygrechin/gitree/actions/workflows/release.yml/badge.svg)](https://github.com/andreygrechin/gitree/actions/workflows/release.yml)
 [![Gitleaks](https://github.com/andreygrechin/gitree/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/andreygrechin/gitree/actions/workflows/gitleaks.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/andreygrechin/gitree/badge)](https://scorecard.dev/viewer/?uri=github.com/andreygrechin/gitree)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fandreygrechin%2Fgitree.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fandreygrechin%2Fgitree?ref=badge_shield)
 
 A CLI tool that recursively scans directories for Git repositories and displays them in a tree structure with inline status information.
 
