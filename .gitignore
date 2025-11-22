@@ -45,3 +45,6 @@ bin/
 *.tmp
 .gocache/
 .cache/
+
+#Ignore vscode AI rules
+.github/instructions/codacy.instructions.md
