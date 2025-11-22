@@ -81,4 +81,4 @@ jobs:
           path: |
             benchmark-current.txt
             benchmark-compare.txt
-          retention-days: 30
+          retention-days: 5

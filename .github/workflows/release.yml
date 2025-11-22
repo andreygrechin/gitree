@@ -112,7 +112,7 @@ jobs:
         with:
           name: dist
           path: dist/
-          retention-days: 30
+          retention-days: 5
 
   # Summary job - provides release information
   summary:
