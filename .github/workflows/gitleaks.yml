@@ -10,6 +10,8 @@ on:
   schedule:
     - cron: 45 21 * * FRI
 
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

@@ -7,6 +7,8 @@ on:
   pull_request_target:
     types: [opened, reopened]
 
+permissions: {}
+
 jobs:
   assign-author:
     permissions:
