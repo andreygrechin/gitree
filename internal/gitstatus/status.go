@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/andreygrechin/gitree/internal/models"
+	"github.com/go-git/go-billy/v5"
 	"github.com/go-git/go-billy/v5/osfs"
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -38,8 +39,13 @@ const (
 	thresholdSlowOperation = 100 * time.Millisecond
 )
 
+var (
+	errNoRemotes                = errors.New("no remotes configured")
+	errGitignorePathNotAbsolute = errors.New("gitignore path must be absolute")
+)
+
 // debugPrintf formats the message using fmt.Sprintf, adds a "DEBUG: " prefix, and outputs it to stderr.
-func debugPrintf(format string, args ...any) {
+func debugPrintf(format string, args ...any) { // TODO Consider checking if debug is enabled before executing
 	message := fmt.Sprintf(format, args...)
 	fmt.Fprintf(os.Stderr, "DEBUG: %s\n", message)
 }
@@ -204,8 +210,6 @@ func extractBranch(repo *git.Repository, status *models.GitStatus) error {
 	return nil
 }
 
-var errNoRemotes = errors.New("no remotes configured")
-
 // extractRemote checks if the repository has a remote configured.
 func extractRemote(repo *git.Repository, status *models.GitStatus) error {
 	remotes, err := repo.Remotes()
@@ -326,29 +330,31 @@ func extractStashes(repo *git.Repository) bool {
 
 // readGitignoreFile reads a gitignore file directly and returns patterns.
 func readGitignoreFile(path string) ([]gitignore.Pattern, error) {
-	file, err := os.Open(path)
+	// Clean the path to prevent directory traversal
+	cleanPath := filepath.Clean(path)
+
+	// Verify the path is absolute to prevent relative path manipulation
+	if !filepath.IsAbs(cleanPath) {
+		return nil, fmt.Errorf("%w: %s", errGitignorePathNotAbsolute, path)
+	}
+
+	f, err := os.Open(cleanPath)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() {
+		_ = f.Close() // Ignore close error on read-only file
+	}()
 
+	scanner := bufio.NewScanner(f)
 	var patterns []gitignore.Pattern
-	scanner := bufio.NewScanner(file)
-	lineNum := 0
 
 	for scanner.Scan() {
-		lineNum++
-		line := scanner.Text()
-
-		// Skip empty lines and comments
-		line = strings.TrimSpace(line)
+		line := strings.TrimSpace(scanner.Text())
 		if line == "" || strings.HasPrefix(line, "#") {
 			continue
 		}
-
-		// Create a pattern
-		pattern := gitignore.ParsePattern(line, nil)
-		patterns = append(patterns, pattern)
+		patterns = append(patterns, gitignore.ParsePattern(line, nil))
 	}
 
 	if err := scanner.Err(); err != nil {
@@ -396,91 +402,116 @@ func categorizeAndPrintFiles(wtStatus git.Status) {
 	printFileList("Deleted", deletedFiles)
 }
 
+// loadGlobalIgnorePatterns loads global gitignore patterns from core.excludesfile and default locations.
+func loadGlobalIgnorePatterns(osFS billy.Filesystem, opts *ExtractOptions) ([]gitignore.Pattern, error) {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		if opts != nil && opts.Debug {
+			debugPrintf("Failed to get home directory: %v", err)
+		}
+
+		return nil, fmt.Errorf("failed to get user home directory: %w", err)
+	}
+
+	if opts != nil && opts.Debug {
+		debugPrintf("User home directory: %s", homeDir)
+	}
+
+	xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
+	if xdgConfigHome == "" {
+		xdgConfigHome = filepath.Join(homeDir, ".config")
+	}
+
+	debugGlobalIgnoreLocations(osFS, homeDir, xdgConfigHome, opts)
+
+	// Try loading from core.excludesfile first from ~/.gitconfig
+	gitconfigPatterns, err := gitignore.LoadGlobalPatterns(osFS)
+	if err != nil {
+		if opts != nil && opts.Debug {
+			debugPrintf("Failed to load global gitignore patterns from core.excludesfile in ~/.gitconfig: %v", err)
+		}
+	}
+	if gitconfigPatterns != nil {
+		if opts != nil && opts.Debug {
+			debugPrintf("Loaded %d patterns from core.excludesfile", len(gitconfigPatterns))
+		}
+
+		return gitconfigPatterns, nil
+	}
+
+	if opts != nil && opts.Debug {
+		debugPrintf("Failed to load global gitignore patterns from core.excludesfile: %v", err)
+	}
+
+	// Fall back to default location
+	return loadDefaultGlobalIgnore(xdgConfigHome, opts)
+}
+
+// debugGlobalIgnoreLocations prints debug information about gitignore file locations.
+func debugGlobalIgnoreLocations(osFS billy.Filesystem, homeDir, xdgConfigHome string, opts *ExtractOptions) {
+	if opts == nil || !opts.Debug {
+		return
+	}
+
+	gitconfigPath := filepath.Join(homeDir, ".gitconfig")
+	debugPrintf("Looking for .gitconfig at: %s", gitconfigPath)
+	if stat, err := osFS.Stat(gitconfigPath); err == nil {
+		debugPrintf(".gitconfig found (size: %d bytes)", stat.Size())
+	} else {
+		debugPrintf(".gitconfig not found or inaccessible: %v", err)
+	}
+
+	defaultIgnorePath := filepath.Join(xdgConfigHome, "git", "ignore")
+	debugPrintf("Checking default global ignore at: %s", defaultIgnorePath)
+	if stat, err := osFS.Stat(defaultIgnorePath); err == nil {
+		debugPrintf("Default global ignore found (size: %d bytes)", stat.Size())
+	} else {
+		debugPrintf("Default global ignore not found: %v", err)
+	}
+}
+
+// loadDefaultGlobalIgnore loads patterns from the default global gitignore location.
+func loadDefaultGlobalIgnore(xdgConfigHome string, opts *ExtractOptions) ([]gitignore.Pattern, error) {
+	defaultIgnorePath := filepath.Join(xdgConfigHome, "git", "ignore")
+	defaultPatterns, err := readGitignoreFile(defaultIgnorePath)
+
+	if err == nil && len(defaultPatterns) > 0 {
+		if opts != nil && opts.Debug {
+			debugPrintf("Loaded %d patterns from default global ignore: %s", len(defaultPatterns), defaultIgnorePath)
+		}
+
+		return defaultPatterns, nil
+	}
+
+	if opts != nil && opts.Debug && err != nil {
+		debugPrintf("Could not read default global ignore: %v", err)
+	}
+
+	return nil, err
+}
+
 // extractUncommittedChanges checks for uncommitted changes in the working tree.
 func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, opts *ExtractOptions) error {
 	worktree, err := repo.Worktree()
 	if err != nil {
 		// Likely a bare repository
 		status.HasChanges = false
+		if errors.Is(err, git.ErrIsBareRepository) {
+			return git.ErrIsBareRepository
+		}
 
-		return err
+		return fmt.Errorf("failed to get worktree: %w", err)
 	}
 
 	// Load global gitignore patterns to align with native git behavior
-	// Use OS filesystem (root "/") because core.excludesfile in ~/.gitconfig
-	// could point to an absolute path anywhere on the filesystem
 	osFS := osfs.New("/")
-
-	// Debug: check what LoadGlobalPatterns will try to access
-	if opts != nil && opts.Debug {
-		homeDir, homeErr := os.UserHomeDir()
-		if homeErr == nil {
-			debugPrintf("User home directory: %s", homeDir)
-			gitconfigPath := filepath.Join(homeDir, ".gitconfig")
-			debugPrintf("Looking for .gitconfig at: %s", gitconfigPath)
-			if stat, err := osFS.Stat(gitconfigPath); err == nil {
-				debugPrintf(".gitconfig found (size: %d bytes)", stat.Size())
-			} else {
-				debugPrintf(".gitconfig not found or inaccessible: %v", err)
-			}
-
-			// Check default global ignore locations
-			xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
-			if xdgConfigHome == "" {
-				xdgConfigHome = filepath.Join(homeDir, ".config")
-			}
-			defaultIgnorePath := filepath.Join(xdgConfigHome, "git", "ignore")
-			debugPrintf("Checking default global ignore at: %s", defaultIgnorePath)
-			if stat, err := osFS.Stat(defaultIgnorePath); err == nil {
-				debugPrintf("Default global ignore found (size: %d bytes)", stat.Size())
-			} else {
-				debugPrintf("Default global ignore not found: %v", err)
-			}
-		} else {
-			debugPrintf("Failed to get home directory: %v", homeErr)
-		}
-	}
-
-	globalPatterns, err := gitignore.LoadGlobalPatterns(osFS)
-	if err == nil {
-		if opts != nil && opts.Debug {
-			debugPrintf("Loaded %d global gitignore patterns from core.excludesfile", len(globalPatterns))
-		}
+	globalPatterns, err := loadGlobalIgnorePatterns(osFS, opts)
+	if err == nil && len(globalPatterns) > 0 {
 		worktree.Excludes = append(worktree.Excludes, globalPatterns...)
-	} else {
 		if opts != nil && opts.Debug {
-			debugPrintf("Failed to load global gitignore patterns from core.excludesfile: %v", err)
+			debugPrintf("Total excludes after adding global patterns: %d", len(worktree.Excludes))
 		}
 	}
-
-	// If no patterns loaded from core.excludesfile, try default location
-	// Git falls back to $XDG_CONFIG_HOME/git/ignore or ~/.config/git/ignore
-	if len(globalPatterns) == 0 {
-		homeDir, err := os.UserHomeDir()
-		if err == nil {
-			xdgConfigHome := os.Getenv("XDG_CONFIG_HOME")
-			if xdgConfigHome == "" {
-				xdgConfigHome = filepath.Join(homeDir, ".config")
-			}
-			defaultIgnorePath := filepath.Join(xdgConfigHome, "git", "ignore")
-
-			// Try to read the default ignore file directly
-			defaultPatterns, err := readGitignoreFile(defaultIgnorePath)
-			if err == nil && len(defaultPatterns) > 0 {
-				if opts != nil && opts.Debug {
-					debugPrintf("Loaded %d patterns from default global ignore: %s", len(defaultPatterns), defaultIgnorePath)
-				}
-				worktree.Excludes = append(worktree.Excludes, defaultPatterns...)
-			} else if opts != nil && opts.Debug && err != nil {
-				debugPrintf("Could not read default global ignore: %v", err)
-			}
-		}
-	}
-
-	if opts != nil && opts.Debug {
-		debugPrintf("Total excludes after adding global patterns: %d", len(worktree.Excludes))
-	}
-	// Note: We skip LoadSystemPatterns() as it requires /etc access and is rarely used
 
 	wtStatus, err := worktree.Status()
 	if err != nil {
@@ -489,7 +520,6 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, o
 
 	status.HasChanges = !wtStatus.IsClean()
 
-	// Debug file listing
 	if opts != nil && opts.Debug && status.HasChanges {
 		categorizeAndPrintFiles(wtStatus)
 	}
