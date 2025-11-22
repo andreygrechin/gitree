@@ -12,4 +12,4 @@ jobs:
   cleanup-caches:
     permissions:
       actions: write
-    uses: andreygrechin/github-actions/.github/workflows/cleanup-caches.yml@main
+    uses: andreygrechin/github-actions/.github/workflows/cleanup-caches.yml@v1.0.0
