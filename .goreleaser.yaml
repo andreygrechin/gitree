@@ -133,3 +133,13 @@ release:
   name_template: "gitree v{{ .Version }}"
   footer: |-
     **Full Changelog**: https://github.com/andreygrechin/gitree/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+signs:
+  - artifacts: checksum
+    args:
+      - "-u"
+      - "36399892+andreygrechin@users.noreply.github.com"
+      - "--output"
+      - "${signature}"
+      - "--detach-sign"
+      - "${artifact}"
