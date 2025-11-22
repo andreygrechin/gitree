@@ -45,7 +45,7 @@ var (
 )
 
 // debugPrintf formats the message using fmt.Sprintf, adds a "DEBUG: " prefix, and outputs it to stderr.
-func debugPrintf(format string, args ...any) { // TODO Consider checking if debug is enabled before executing
+func debugPrintf(format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
 	fmt.Fprintf(os.Stderr, "DEBUG: %s\n", message)
 }
