@@ -14,4 +14,4 @@ jobs:
     permissions:
       issues: write
       pull-requests: write
-    uses: andreygrechin/github-actions/.github/workflows/assign-author.yml@dcce65df1c204fb59fb97f79f384903fea5326e2 # v1.0.0
+    uses: andreygrechin/github-actions/.github/workflows/assign-author.yml@2920bcbd41f31201daaf7b42868cfc348e5a3de2 # v1.0.0
