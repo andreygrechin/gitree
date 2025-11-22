@@ -98,7 +98,8 @@ snapshot:
   version_template: "{{ incpatch .Version }}-snapshot+{{ .ShortCommit }}"
 
 checksum:
-  name_template: "checksums.txt"
+  name_template: >-
+    {{- .ProjectName }}_{{ .Version }}_checksums_SHA256.txt
   algorithm: sha256
 
 changelog:
@@ -139,11 +140,12 @@ release:
     **Full Changelog**: https://github.com/andreygrechin/gitree/compare/{{ .PreviousTag }}...{{ .Tag }}
 
 signs:
-  - artifacts: checksum
+  - cmd: cosign
+    signature: "${artifact}.sigstore.json"
+    stdin: "{{ .Env.COSIGN_PWD }}"
     args:
-      - "-u"
-      - "36399892+andreygrechin@users.noreply.github.com"
-      - "--output"
-      - "${signature}"
-      - "--detach-sign"
-      - "${artifact}"
+      - sign-blob
+      - --bundle=${signature}
+      - ${artifact}
+      - --yes
+    artifacts: checksum
