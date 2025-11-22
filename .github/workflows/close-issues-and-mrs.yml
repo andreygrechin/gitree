@@ -13,4 +13,4 @@ jobs:
       contents: write # only for delete-branch option
       issues: write
       pull-requests: write
-    uses: andreygrechin/github-actions/.github/workflows/close-issues-and-mrs.yml@main
+    uses: andreygrechin/github-actions/.github/workflows/close-issues-and-mrs.yml@v1.0.0
