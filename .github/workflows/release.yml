@@ -1,5 +1,5 @@
 ---
-name: Release
+name: release
 
 on:
   # Manual trigger for releases
