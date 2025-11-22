@@ -50,7 +50,7 @@ jobs:
           git checkout -
 
       - name: Install benchstat
-        run: go install golang.org/x/perf/cmd/benchstat@latest
+        run: go install golang.org/x/perf/cmd/benchstat@cfbd823f7301350e073dd80fc5355ccea36d18fb
 
       - name: Compare benchmarks
         if: inputs.compare_ref != ''
