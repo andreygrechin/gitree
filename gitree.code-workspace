@@ -12,11 +12,14 @@
 			"fatih",
 			"Fprintf",
 			"gitree",
+			"gitree",
 			"gitstatus",
+			"gochecknoglobals",
 			"goconst",
 			"GOCOVERDIR",
 			"GOPATH",
 			"goreleaser",
+			"honnef",
 			"inodes",
 			"objs",
 			"ossf",
@@ -24,6 +27,7 @@
 			"refactorable",
 			"speckit",
 			"Storer",
+			"syft",
 			"usetesting",
 			"worktree"
 		]
