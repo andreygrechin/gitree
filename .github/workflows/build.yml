@@ -56,10 +56,10 @@ jobs:
       - name: go vet
         run: go vet ./...
 
-      - uses: dominikh/staticcheck-action@024238d2898c874f26d723e7d0ff4308c35589a2 # v1.4.0
-        with:
-          install-go: false
-          version: latest
+      - name: Staticcheck
+        run: |
+          go install honnef.co/go/tools/cmd/staticcheck@2025.1.1
+          staticcheck ./...
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@e7fa5ac41e1cf5b7d48e45e42232ce7ada589601 # v9.1.0
