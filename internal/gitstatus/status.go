@@ -59,9 +59,13 @@ func DefaultOptions() *ExtractOptions {
 }
 
 // Extract retrieves Git status information for a single repository.
-func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*models.GitStatus, error) {
+func Extract(ctx context.Context, repoPath string, opts *ExtractOptions, ignorePatterns []gitignore.Pattern) (*models.GitStatus, error) {
 	if opts == nil {
 		opts = DefaultOptions()
+	}
+
+	if opts.Debug {
+		debugPrintf("Starting status extraction for repository: %s", repoPath)
 	}
 
 	// Apply timeout if specified
@@ -76,7 +80,7 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*model
 	errorChan := make(chan error, 1)
 
 	go func() {
-		status, err := extractGitStatus(repoPath, opts)
+		status, err := extractGitStatus(repoPath, opts, ignorePatterns)
 		if err != nil {
 			errorChan <- err
 
@@ -109,7 +113,7 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions) (*model
 }
 
 // extractGitStatus performs the actual Git status extraction.
-func extractGitStatus(repoPath string, opts *ExtractOptions) (*models.GitStatus, error) {
+func extractGitStatus(repoPath string, opts *ExtractOptions, ignorePatterns []gitignore.Pattern) (*models.GitStatus, error) {
 	startTime := time.Now()
 
 	// Open repository
@@ -146,7 +150,7 @@ func extractGitStatus(repoPath string, opts *ExtractOptions) (*models.GitStatus,
 	status.HasStashes = extractStashes(repo)
 
 	// Check for uncommitted changes
-	if err := extractUncommittedChanges(repo, status, opts); err != nil {
+	if err := extractUncommittedChanges(repo, status, opts, ignorePatterns); err != nil {
 		// Non-fatal for bare repos
 		if !errors.Is(err, git.ErrIsBareRepository) {
 			if status.Error == "" {
@@ -156,7 +160,7 @@ func extractGitStatus(repoPath string, opts *ExtractOptions) (*models.GitStatus,
 	}
 
 	// Debug output
-	if opts != nil && opts.Debug {
+	if opts.Debug {
 		printDebugSummary(repoPath, status, startTime)
 	}
 
@@ -406,14 +410,14 @@ func categorizeAndPrintFiles(wtStatus git.Status) {
 func loadGlobalIgnorePatterns(osFS billy.Filesystem, opts *ExtractOptions) ([]gitignore.Pattern, error) {
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		if opts != nil && opts.Debug {
+		if opts.Debug {
 			debugPrintf("Failed to get home directory: %v", err)
 		}
 
 		return nil, fmt.Errorf("failed to get user home directory: %w", err)
 	}
 
-	if opts != nil && opts.Debug {
+	if opts.Debug {
 		debugPrintf("User home directory: %s", homeDir)
 	}
 
@@ -427,19 +431,19 @@ func loadGlobalIgnorePatterns(osFS billy.Filesystem, opts *ExtractOptions) ([]gi
 	// Try loading from core.excludesfile first from ~/.gitconfig
 	gitconfigPatterns, err := gitignore.LoadGlobalPatterns(osFS)
 	if err != nil {
-		if opts != nil && opts.Debug {
+		if opts.Debug {
 			debugPrintf("Failed to load global gitignore patterns from core.excludesfile in ~/.gitconfig: %v", err)
 		}
 	}
 	if gitconfigPatterns != nil {
-		if opts != nil && opts.Debug {
+		if opts.Debug {
 			debugPrintf("Loaded %d patterns from core.excludesfile", len(gitconfigPatterns))
 		}
 
 		return gitconfigPatterns, nil
 	}
 
-	if opts != nil && opts.Debug {
+	if opts.Debug {
 		debugPrintf("Failed to load global gitignore patterns from core.excludesfile: %v", err)
 	}
 
@@ -449,7 +453,7 @@ func loadGlobalIgnorePatterns(osFS billy.Filesystem, opts *ExtractOptions) ([]gi
 
 // debugGlobalIgnoreLocations prints debug information about gitignore file locations.
 func debugGlobalIgnoreLocations(osFS billy.Filesystem, homeDir, xdgConfigHome string, opts *ExtractOptions) {
-	if opts == nil || !opts.Debug {
+	if !opts.Debug {
 		return
 	}
 
@@ -476,14 +480,14 @@ func loadDefaultGlobalIgnore(xdgConfigHome string, opts *ExtractOptions) ([]giti
 	defaultPatterns, err := readGitignoreFile(defaultIgnorePath)
 
 	if err == nil && len(defaultPatterns) > 0 {
-		if opts != nil && opts.Debug {
+		if opts.Debug {
 			debugPrintf("Loaded %d patterns from default global ignore: %s", len(defaultPatterns), defaultIgnorePath)
 		}
 
 		return defaultPatterns, nil
 	}
 
-	if opts != nil && opts.Debug && err != nil {
+	if opts.Debug && err != nil {
 		debugPrintf("Could not read default global ignore: %v", err)
 	}
 
@@ -491,7 +495,12 @@ func loadDefaultGlobalIgnore(xdgConfigHome string, opts *ExtractOptions) ([]giti
 }
 
 // extractUncommittedChanges checks for uncommitted changes in the working tree.
-func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, opts *ExtractOptions) error {
+func extractUncommittedChanges(
+	repo *git.Repository,
+	status *models.GitStatus,
+	opts *ExtractOptions,
+	ignorePatterns []gitignore.Pattern,
+) error {
 	worktree, err := repo.Worktree()
 	if err != nil {
 		// Likely a bare repository
@@ -503,12 +512,10 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, o
 		return fmt.Errorf("failed to get worktree: %w", err)
 	}
 
-	// Load global gitignore patterns to align with native git behavior
-	osFS := osfs.New("/")
-	globalPatterns, err := loadGlobalIgnorePatterns(osFS, opts)
-	if err == nil && len(globalPatterns) > 0 {
-		worktree.Excludes = append(worktree.Excludes, globalPatterns...)
-		if opts != nil && opts.Debug {
+	// Add pre-loaded global gitignore patterns to align with native git behavior
+	if len(ignorePatterns) > 0 {
+		worktree.Excludes = append(worktree.Excludes, ignorePatterns...)
+		if opts.Debug {
 			debugPrintf("Total excludes after adding global patterns: %d", len(worktree.Excludes))
 		}
 	}
@@ -520,7 +527,7 @@ func extractUncommittedChanges(repo *git.Repository, status *models.GitStatus, o
 
 	status.HasChanges = !wtStatus.IsClean()
 
-	if opts != nil && opts.Debug && status.HasChanges {
+	if opts.Debug && status.HasChanges {
 		categorizeAndPrintFiles(wtStatus)
 	}
 
@@ -537,6 +544,17 @@ func ExtractBatch(
 
 	if len(repos) == 0 {
 		return make(map[string]*models.GitStatus), nil
+	}
+
+	// Load global gitignore patterns once for all repositories
+	osFS := osfs.New("/")
+	ignorePatterns, err := loadGlobalIgnorePatterns(osFS, opts)
+	if err != nil && opts.Debug {
+		debugPrintf("Failed to load global ignore patterns: %v", err)
+	}
+	// Use empty slice if loading failed
+	if ignorePatterns == nil {
+		ignorePatterns = []gitignore.Pattern{}
 	}
 
 	// Create channels
@@ -574,7 +592,7 @@ func ExtractBatch(
 			}
 
 			// Extract status
-			status, err := Extract(ctx, repoPath, opts)
+			status, err := Extract(ctx, repoPath, opts, ignorePatterns)
 			results <- result{
 				path:   repoPath,
 				status: status,

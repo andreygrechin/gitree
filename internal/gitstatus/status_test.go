@@ -12,6 +12,7 @@ import (
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/config"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/format/gitignore"
 	"github.com/go-git/go-git/v5/plumbing/object"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -161,7 +162,7 @@ func TestExtract_GetsBranchName(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "basic")
 
 	ctx := context.Background()
-	status, err := Extract(ctx, repoPath, nil)
+	status, err := Extract(ctx, repoPath, nil, []gitignore.Pattern{})
 
 	require.NoError(t, err)
 	require.NotNil(t, status)
@@ -175,7 +176,7 @@ func TestExtract_DetectsDetachedHEAD(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "detached")
 
 	ctx := context.Background()
-	status, err := Extract(ctx, repoPath, nil)
+	status, err := Extract(ctx, repoPath, nil, []gitignore.Pattern{})
 
 	require.NoError(t, err)
 	require.NotNil(t, status)
@@ -188,7 +189,7 @@ func TestExtract_CalculatesAheadBehindCounts(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "with-ahead")
 
 	ctx := context.Background()
-	status, err := Extract(ctx, repoPath, nil)
+	status, err := Extract(ctx, repoPath, nil, []gitignore.Pattern{})
 
 	require.NoError(t, err)
 	require.NotNil(t, status)
@@ -202,7 +203,7 @@ func TestExtract_DetectsNoRemote(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "basic")
 
 	ctx := context.Background()
-	status, err := Extract(ctx, repoPath, nil)
+	status, err := Extract(ctx, repoPath, nil, []gitignore.Pattern{})
 
 	require.NoError(t, err)
 	require.NotNil(t, status)
@@ -216,7 +217,7 @@ func TestExtract_DetectsStashes(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "with-stash")
 
 	ctx := context.Background()
-	status, err := Extract(ctx, repoPath, nil)
+	status, err := Extract(ctx, repoPath, nil, []gitignore.Pattern{})
 
 	require.NoError(t, err)
 	require.NotNil(t, status)
@@ -228,7 +229,7 @@ func TestExtract_DetectsUncommittedChanges(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "with-changes")
 
 	ctx := context.Background()
-	status, err := Extract(ctx, repoPath, nil)
+	status, err := Extract(ctx, repoPath, nil, []gitignore.Pattern{})
 
 	require.NoError(t, err)
 	require.NotNil(t, status)
@@ -240,7 +241,7 @@ func TestExtract_HandlesBareRepositories(t *testing.T) {
 	repoPath := createTestRepoWithState(t, "bare")
 
 	ctx := context.Background()
-	status, err := Extract(ctx, repoPath, nil)
+	status, err := Extract(ctx, repoPath, nil, []gitignore.Pattern{})
 
 	require.NoError(t, err)
 	require.NotNil(t, status)
@@ -258,7 +259,7 @@ func TestExtract_HandlesCorruptedRepos(t *testing.T) {
 	require.NoError(t, err)
 
 	ctx := context.Background()
-	status, err := Extract(ctx, tempDir, nil)
+	status, err := Extract(ctx, tempDir, nil, []gitignore.Pattern{})
 
 	// Should return error for corrupted repo
 	require.Error(t, err)
@@ -280,7 +281,7 @@ func TestExtract_RespectsContextTimeout(t *testing.T) {
 	// Wait a moment to ensure timeout fires
 	time.Sleep(10 * time.Millisecond)
 
-	status, err := Extract(ctx, repoPath, nil)
+	status, err := Extract(ctx, repoPath, nil, []gitignore.Pattern{})
 
 	// Should timeout
 	require.Error(t, err)
@@ -339,7 +340,7 @@ func TestExtract_WithTimeoutOption(t *testing.T) {
 		Timeout: 5 * time.Second,
 	}
 
-	status, err := Extract(ctx, repoPath, opts)
+	status, err := Extract(ctx, repoPath, opts, []gitignore.Pattern{})
 
 	require.NoError(t, err)
 	require.NotNil(t, status)
@@ -349,7 +350,7 @@ func TestExtract_WithTimeoutOption(t *testing.T) {
 // Additional test: Extract handles non-existent path.
 func TestExtract_NonExistentPath(t *testing.T) {
 	ctx := context.Background()
-	status, err := Extract(ctx, "/nonexistent/path", nil)
+	status, err := Extract(ctx, "/nonexistent/path", nil, []gitignore.Pattern{})
 
 	require.Error(t, err)
 	if status != nil {
