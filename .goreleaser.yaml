@@ -98,8 +98,7 @@ snapshot:
   version_template: "{{ incpatch .Version }}-snapshot+{{ .ShortCommit }}"
 
 checksum:
-  name_template: >-
-    {{- .ProjectName }}_{{ .Version }}_checksums_SHA256.txt
+  name_template: checksums.txt
   algorithm: sha256
 
 changelog:
@@ -142,10 +141,10 @@ release:
 signs:
   - cmd: cosign
     signature: "${artifact}.sigstore.json"
-    stdin: "{{ .Env.COSIGN_PWD }}"
     args:
       - sign-blob
       - --bundle=${signature}
       - ${artifact}
       - --yes
     artifacts: checksum
+    output: true
