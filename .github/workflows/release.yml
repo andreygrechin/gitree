@@ -4,7 +4,7 @@ name: release
 on:
   push:
     tags:
-      - "v*"
+      - v*
 
 permissions: {}
 
@@ -21,9 +21,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           fetch-depth: 0 # this is important, otherwise it won't checkout the full tree (i.e. no previous tags)
+      - name: Verify tag is on main
+        run: |
+          git fetch origin main
+          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref }})
+          if ! git merge-base --is-ancestor $TAG_COMMIT origin/main; then
+            echo "❌ Tag must be on main branch"
+            exit 1
+          fi
       - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
         with:
           go-version: stable
@@ -32,7 +40,7 @@ jobs:
       - uses: goreleaser/goreleaser-action@e435ccd777264be153ace6237001ef4d979d3a7a # v6.4.0
         with:
           args: release --clean
-          version: '~> v2.12'
+          version: ~> v2.12
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
