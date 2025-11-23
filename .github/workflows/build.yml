@@ -2,14 +2,6 @@
 name: build
 
 on:
-  push:
-    tags: ["v*"]
-    paths:
-      - .github/workflows/*.yml
-      - "**/*.go"
-      - go.*
-      - Makefile
-      - .golangci.yaml
   pull_request:
     branches: ["main"]
     paths:

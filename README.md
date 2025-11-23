@@ -3,10 +3,13 @@
 [![Build](https://github.com/andreygrechin/gitree/actions/workflows/build.yml/badge.svg)](https://github.com/andreygrechin/gitree/actions/workflows/build.yml)
 [![Release](https://github.com/andreygrechin/gitree/actions/workflows/release.yml/badge.svg)](https://github.com/andreygrechin/gitree/actions/workflows/release.yml)
 [![Gitleaks](https://github.com/andreygrechin/gitree/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/andreygrechin/gitree/actions/workflows/gitleaks.yml)
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/andreygrechin/gitree)](https://goreportcard.com/report/github.com/andreygrechin/gitree)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/andreygrechin/gitree/badge)](https://scorecard.dev/viewer/?uri=github.com/andreygrechin/gitree)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fandreygrechin%2Fgitree.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fandreygrechin%2Fgitree?ref=badge_shield)
 
-A CLI tool that recursively scans directories for Git repositories and displays them in a tree structure with inline status information.
+**gitree** is a CLI tool that recursively scans directories for Git repositories and displays them in a tree structure with inline status information.
 
 ## About
 
@@ -44,8 +47,8 @@ Example output:
 
 ## Installation
 
-> [!WARNING]
-> Windows is not currently supported. This tool is designed for Linux and macOS.
+> [!IMPORTANT]
+> Windows is not currently supported. This tool is designed exclusively for Linux and macOS.
 
 ### Homebrew (macOS)
 

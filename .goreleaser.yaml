@@ -8,6 +8,8 @@ force_token: github
 before:
   hooks:
     - go mod tidy -diff
+    - go vet ./...
+    - go test ./...
 
 metadata:
   mod_timestamp: "{{ .CommitTimestamp }}"
