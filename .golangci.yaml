@@ -31,8 +31,6 @@ linters:
     - varnamelen
     - funlen
     - depguard
-    - wsl_v5
-    - noinlineerr
     - exhaustruct
     - cyclop
     - testpackage
