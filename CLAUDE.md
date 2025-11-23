@@ -36,7 +36,6 @@ go test -run TestName ./internal/scanner  # Run specific test
 ```bash
 make lint               # Format code and run all linters (includes fmt, go vet, staticcheck, golangci-lint)
 make format             # Format code with gofumpt and auto-fix some issues
-make fmt                # Alias for format
 make security           # Run security checks (gosec, govulncheck)
 ```
 
