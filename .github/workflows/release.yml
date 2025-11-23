@@ -3,8 +3,7 @@ name: release
 
 on:
   push:
-    tags:
-      - v*
+    tags: ["v*"]
 
 permissions: {}
 
@@ -27,7 +26,7 @@ jobs:
       - name: Verify tag is on main
         run: |
           git fetch origin main
-          TAG_COMMIT=$(git rev-list -n 1 ${{ github.ref }})
+          TAG_COMMIT=$(git rev-list -n 1 "${{ github.ref }}")
           if ! git merge-base --is-ancestor $TAG_COMMIT origin/main; then
             echo "❌ Tag must be on main branch"
             exit 1
