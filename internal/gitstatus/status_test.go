@@ -312,10 +312,9 @@ func TestExtractBatch_ConcurrentProcessing(t *testing.T) {
 	}
 
 	startTime := time.Now()
-	statuses, err := ExtractBatch(ctx, repos, opts)
+	statuses := ExtractBatch(ctx, repos, opts)
 	duration := time.Since(startTime)
 
-	require.NoError(t, err)
 	assert.Len(t, statuses, 5)
 
 	// Verify all repos have status
@@ -364,9 +363,8 @@ func TestExtractBatch_EmptyRepos(t *testing.T) {
 	ctx := context.Background()
 	repos := make(map[string]*models.Repository)
 
-	statuses, err := ExtractBatch(ctx, repos, nil)
+	statuses := ExtractBatch(ctx, repos, nil)
 
-	require.NoError(t, err)
 	assert.Empty(t, statuses)
 }
 
@@ -387,11 +385,10 @@ func TestExtractBatch_RespectsContextCancellation(t *testing.T) {
 	// Cancel immediately
 	cancel()
 
-	statuses, err := ExtractBatch(ctx, repos, nil)
+	statuses := ExtractBatch(ctx, repos, nil)
 
 	// Should handle cancellation gracefully
 	// May return partial results or error
 	_ = statuses
-	_ = err
 	// The key is that it shouldn't hang
 }

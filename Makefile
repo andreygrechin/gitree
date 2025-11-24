@@ -19,7 +19,7 @@ build:
 		./cmd/gitree
 
 format:
-	gofumpt -l -w .
+	gofumpt -l -w ./cmd ./internal
 	golangci-lint run --enable-only=nlreturn,godot,intrange --fix
 
 fmt: format

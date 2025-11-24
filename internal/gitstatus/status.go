@@ -536,14 +536,14 @@ func extractUncommittedChanges(
 
 // ExtractBatch extracts Git status for multiple repositories concurrently.
 func ExtractBatch(
-	ctx context.Context, repos map[string]*models.Repository, opts *ExtractOptions) (map[string]*models.GitStatus, error,
-) {
+	ctx context.Context, repos map[string]*models.Repository, opts *ExtractOptions,
+) map[string]*models.GitStatus {
 	if opts == nil {
 		opts = DefaultOptions()
 	}
 
 	if len(repos) == 0 {
-		return make(map[string]*models.GitStatus), nil
+		return make(map[string]*models.GitStatus)
 	}
 
 	// Load global gitignore patterns once for all repositories
@@ -615,5 +615,5 @@ func ExtractBatch(
 		}
 	}
 
-	return statuses, nil
+	return statuses
 }

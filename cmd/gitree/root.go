@@ -160,14 +160,7 @@ func runGitree(_ *cobra.Command, _ []string) error {
 		MaxConcurrency: maxConcurrentRequests,
 		Debug:          debugFlag,
 	}
-	statuses, err := gitstatus.ExtractBatch(ctx, repoMap, statusOpts)
-	if err != nil {
-		if !debugFlag {
-			s.Stop()
-		}
-		fmt.Fprintf(os.Stderr, "Warning: Some repositories failed status extraction: %v\n", err)
-		// Continue anyway with partial results
-	}
+	statuses := gitstatus.ExtractBatch(ctx, repoMap, statusOpts)
 
 	// Populate repositories with status
 	for path, status := range statuses {
