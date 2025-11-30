@@ -30,11 +30,18 @@ type ExtractOptions struct {
 
 	// Debug enables debug output for status extraction operations
 	Debug bool
+
+	// Fetch enables fetching from origin remote before calculating ahead/behind counts
+	Fetch bool
+
+	// FetchRetries is the number of retry attempts for failed fetch operations
+	FetchRetries int
 }
 
 const (
 	defaultExtractTimeout  = 10 * time.Second
 	defaultMaxConcurrency  = 10
+	defaultFetchRetries    = 3
 	maxFilesPerCategory    = 20
 	thresholdSlowOperation = 100 * time.Millisecond
 )
@@ -55,6 +62,8 @@ func DefaultOptions() *ExtractOptions {
 	return &ExtractOptions{
 		Timeout:        defaultExtractTimeout,
 		MaxConcurrency: defaultMaxConcurrency,
+		Fetch:          true,
+		FetchRetries:   defaultFetchRetries,
 	}
 }
 
@@ -549,6 +558,19 @@ func ExtractBatch(
 
 	if len(repos) == 0 {
 		return batchResult
+	}
+
+	// Fetch phase (if enabled)
+	if opts.Fetch {
+		if opts.Debug {
+			debugPrintf("Starting fetch phase for %d repositories", len(repos))
+		}
+		fetchBatch(ctx, repos, opts, batchResult)
+		if opts.Debug {
+			stats := batchResult.FetchStats
+			debugPrintf("Fetch complete: %d attempted, %d successful, %d skipped, %d failed",
+				stats.TotalAttempted, stats.Successful, stats.Skipped, stats.Failed)
+		}
 	}
 
 	// Load global gitignore patterns once for all repositories

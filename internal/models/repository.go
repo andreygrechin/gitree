@@ -65,6 +65,7 @@ type GitStatus struct {
 	HasStashes bool   // Whether repository has stashed changes
 	HasChanges bool   // Whether repository has uncommitted changes
 	Error      string // Partial error message if some status info couldn't be retrieved
+	FetchError string // Error from fetch operation (separate from status extraction error)
 }
 
 var errGitStatusValidation = errors.New("git status validation error")
@@ -89,14 +90,15 @@ func (g *GitStatus) Validate() error {
 
 // IsStandardStatus returns true if the repository is in a standard state.
 func (g *GitStatus) IsStandardStatus() bool {
-	// Standard state: on main/master, in sync with remote, no stashes, no changes, no error
+	// Standard state: on main/master, in sync with remote, no stashes, no changes, no errors
 	return (g.Branch == "main" || g.Branch == "master") && //nolint:goconst // "main" and "master" are domain literals
 		g.HasRemote &&
 		g.Ahead == 0 &&
 		g.Behind == 0 &&
 		!g.HasStashes &&
 		!g.HasChanges &&
-		g.Error == ""
+		g.Error == "" &&
+		g.FetchError == ""
 }
 
 // Format returns the formatted Git status string for display with colorization.
@@ -108,6 +110,7 @@ func (g *GitStatus) Format() string {
 	//   - [[ DETACHED ]] - Detached HEAD state (yellow brackets)
 	//   - [[ main | ○ ]] - No remote configured (yellow brackets)
 	//   - [[ main | error ]] - Partial error retrieving status (yellow brackets)
+	//   - [[ main | fetch-err ]] - Fetch from origin failed (yellow brackets)
 	//   - [[ N/A | error ]] - Error retrieving status (N/A and error are red, yellow brackets)
 	var parts []string
 
@@ -147,6 +150,11 @@ func (g *GitStatus) Format() string {
 	// Error indicator: red (added as status indicator)
 	if g.Error != "" {
 		parts = append(parts, redColor("error"))
+	}
+
+	// Fetch error indicator: red (separate from status extraction error)
+	if g.FetchError != "" {
+		parts = append(parts, redColor("fetch-err"))
 	}
 
 	// Build result with brackets (yellow for non-standard status, gray for standard) and separator

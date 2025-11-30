@@ -31,6 +31,7 @@ var (
 	noColorFlag bool
 	allFlag     bool
 	debugFlag   bool
+	noFetchFlag bool
 
 	// Root command.
 	rootCmd = &cobra.Command{
@@ -38,6 +39,9 @@ var (
 		Short: "Recursively scan directories for Git repositories and display them in a tree structure",
 		Long: `gitree scans the current directory and its subdirectories for Git repositories,
 displays them in a tree structure with status information.
+
+By default, gitree fetches from origin remote before calculating ahead/behind
+counts. Use --no-fetch to skip fetching and use local refs only.
 
 By default, only repositories needing attention are shown (uncommitted changes,
 non-main/master branches, ahead/behind remote, stashes, or no remote tracking).
@@ -62,6 +66,8 @@ func init() { //nolint:gochecknoinits // Cobra CLI initialization
 	rootCmd.Flags().BoolVarP(&allFlag, "all", "a", false,
 		"Show all repositories including clean ones (default shows only repos needing attention)")
 	rootCmd.Flags().BoolVar(&debugFlag, "debug", false, "Enable debug output")
+	rootCmd.Flags().BoolVar(&noFetchFlag, "no-fetch", false,
+		"Skip fetching from remote (use local refs only)")
 
 	// Set PersistentPreRun to handle global flags (color suppression)
 	rootCmd.PersistentPreRun = handleGlobalFlags
@@ -141,12 +147,18 @@ func runGitree(_ *cobra.Command, _ []string) error {
 			s.Stop()
 		}
 		_, _ = fmt.Fprintln(os.Stdout, "No Git repositories found in this directory.")
+		// Still print summary even when no repos found
+		printSummary(scanResult, &models.BatchResult{})
 
 		return nil
 	}
 
 	// Update spinner message
-	s.Suffix = fmt.Sprintf(" Extracting Git status for %d repositories...", len(scanResult.Repositories))
+	if noFetchFlag {
+		s.Suffix = fmt.Sprintf(" Extracting Git status for %d repositories...", len(scanResult.Repositories))
+	} else {
+		s.Suffix = fmt.Sprintf(" Fetching and extracting Git status for %d repositories...", len(scanResult.Repositories))
+	}
 
 	// Create map of repositories for batch processing
 	repoMap := make(map[string]*models.Repository)
@@ -154,11 +166,12 @@ func runGitree(_ *cobra.Command, _ []string) error {
 		repoMap[repo.Path] = repo
 	}
 
-	// Extract Git status concurrently
+	// Extract Git status concurrently (with fetch if enabled)
 	statusOpts := &gitstatus.ExtractOptions{
 		Timeout:        defaultTimeout,
 		MaxConcurrency: maxConcurrentRequests,
 		Debug:          debugFlag,
+		Fetch:          !noFetchFlag,
 	}
 	batchResult := gitstatus.ExtractBatch(ctx, repoMap, statusOpts)
 
@@ -180,6 +193,8 @@ func runGitree(_ *cobra.Command, _ []string) error {
 		}
 		_, _ = fmt.Fprintln(os.Stdout, "All repositories are in clean state (on main/master, in sync with remote, no changes).")
 		_, _ = fmt.Fprintln(os.Stdout, "Use --all flag to show all repositories including clean ones.")
+		// Still print summary even when all repos filtered
+		printSummary(scanResult, batchResult)
 
 		return nil
 	}
@@ -196,5 +211,29 @@ func runGitree(_ *cobra.Command, _ []string) error {
 	output := tree.Format(root, nil)
 	_, _ = fmt.Fprint(os.Stdout, output)
 
+	// Print summary statistics
+	printSummary(scanResult, batchResult)
+
 	return nil
+}
+
+// printSummary outputs statistics about the scan and fetch operations.
+func printSummary(scanResult *models.ScanResult, batchResult *models.BatchResult) {
+	_, _ = fmt.Fprintln(os.Stderr)
+	_, _ = fmt.Fprintf(os.Stderr, "Scanned: %d folders\n", scanResult.TotalScanned)
+	_, _ = fmt.Fprintf(os.Stderr, "Found: %d repositories\n", scanResult.TotalRepos)
+
+	if batchResult.FetchStats != nil && batchResult.FetchStats.TotalAttempted > 0 {
+		stats := batchResult.FetchStats
+		_, _ = fmt.Fprintf(os.Stderr, "Fetch: %d attempted, %d successful, %d skipped, %d failed\n",
+			stats.TotalAttempted, stats.Successful, stats.Skipped, stats.Failed)
+
+		// Print failed repos if any
+		if stats.Failed > 0 {
+			_, _ = fmt.Fprintln(os.Stderr, "\nFetch failures:")
+			for _, path := range stats.FailedRepos {
+				_, _ = fmt.Fprintf(os.Stderr, "  - %s\n", path)
+			}
+		}
+	}
 }
