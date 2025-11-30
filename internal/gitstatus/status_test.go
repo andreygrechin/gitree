@@ -312,13 +312,16 @@ func TestExtractBatch_ConcurrentProcessing(t *testing.T) {
 	}
 
 	startTime := time.Now()
-	statuses := ExtractBatch(ctx, repos, opts)
+	batchResult := ExtractBatch(ctx, repos, opts)
 	duration := time.Since(startTime)
 
-	assert.Len(t, statuses, 5)
+	assert.Len(t, batchResult.Statuses, 5)
+	assert.Equal(t, 5, batchResult.SuccessCount)
+	assert.Equal(t, 0, batchResult.FailureCount)
+	assert.Empty(t, batchResult.FailedRepos)
 
 	// Verify all repos have status
-	for path, status := range statuses {
+	for path, status := range batchResult.Statuses {
 		assert.NotNil(t, status, "repo %s should have status", path)
 		assert.Contains(t, []string{"main", "master"}, status.Branch)
 	}
@@ -328,6 +331,33 @@ func TestExtractBatch_ConcurrentProcessing(t *testing.T) {
 	// With concurrency, should be much faster
 	t.Logf("Batch processing took: %v", duration)
 	assert.Less(t, duration, 5*time.Second, "should complete quickly with concurrency")
+}
+
+// Test ExtractBatch returns aggregate errors.
+func TestExtractBatch_AggregateErrors(t *testing.T) {
+	// Create a valid repo
+	validRepoPath := createTestRepoWithState(t, "basic")
+
+	// Use a non-existent path for an invalid repo
+	invalidRepoPath := "/nonexistent/path/to/repo"
+
+	repos := map[string]*models.Repository{
+		validRepoPath:   {Path: validRepoPath, Name: "valid"},
+		invalidRepoPath: {Path: invalidRepoPath, Name: "invalid"},
+	}
+
+	ctx := context.Background()
+	batchResult := ExtractBatch(ctx, repos, nil)
+
+	assert.Len(t, batchResult.Statuses, 2, "both valid and invalid repos should be in Statuses map")
+	assert.Equal(t, 1, batchResult.SuccessCount)
+	assert.Equal(t, 1, batchResult.FailureCount)
+	assert.Contains(t, batchResult.FailedRepos, invalidRepoPath)
+
+	// Check that the invalid repo has an error in its status
+	invalidStatus := batchResult.Statuses[invalidRepoPath]
+	require.NotNil(t, invalidStatus)
+	assert.NotEmpty(t, invalidStatus.Error)
 }
 
 // Additional test: Extract with custom timeout option.
@@ -363,9 +393,11 @@ func TestExtractBatch_EmptyRepos(t *testing.T) {
 	ctx := context.Background()
 	repos := make(map[string]*models.Repository)
 
-	statuses := ExtractBatch(ctx, repos, nil)
+	batchResult := ExtractBatch(ctx, repos, nil)
 
-	assert.Empty(t, statuses)
+	assert.Empty(t, batchResult.Statuses)
+	assert.Equal(t, 0, batchResult.SuccessCount)
+	assert.Equal(t, 0, batchResult.FailureCount)
 }
 
 // Test ExtractBatch respects context cancellation.
@@ -385,10 +417,10 @@ func TestExtractBatch_RespectsContextCancellation(t *testing.T) {
 	// Cancel immediately
 	cancel()
 
-	statuses := ExtractBatch(ctx, repos, nil)
+	batchResult := ExtractBatch(ctx, repos, nil)
 
 	// Should handle cancellation gracefully
 	// May return partial results or error
-	_ = statuses
+	_ = batchResult
 	// The key is that it shouldn't hang
 }

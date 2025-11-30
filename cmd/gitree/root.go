@@ -160,10 +160,10 @@ func runGitree(_ *cobra.Command, _ []string) error {
 		MaxConcurrency: maxConcurrentRequests,
 		Debug:          debugFlag,
 	}
-	statuses := gitstatus.ExtractBatch(ctx, repoMap, statusOpts)
+	batchResult := gitstatus.ExtractBatch(ctx, repoMap, statusOpts)
 
 	// Populate repositories with status
-	for path, status := range statuses {
+	for path, status := range batchResult.Statuses {
 		if repo, exists := repoMap[path]; exists {
 			repo.GitStatus = status
 		}
