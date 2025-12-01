@@ -141,6 +141,11 @@ func runGitree(_ *cobra.Command, _ []string) error {
 		return fmt.Errorf("failed to scan directory: %w", err)
 	}
 
+	// Validate scan result
+	if valErr := scanResult.Validate(); valErr != nil {
+		logValidationWarning("ScanResult validation failed", valErr)
+	}
+
 	// Check if any repositories were found
 	if len(scanResult.Repositories) == 0 {
 		if !debugFlag {
@@ -182,6 +187,18 @@ func runGitree(_ *cobra.Command, _ []string) error {
 		}
 	}
 
+	// Validate repositories and their git status
+	for _, repo := range scanResult.Repositories {
+		if valErr := repo.Validate(); valErr != nil {
+			logValidationWarning("Repository validation failed for "+repo.Path, valErr)
+		}
+		if repo.GitStatus != nil {
+			if valErr := repo.GitStatus.Validate(); valErr != nil {
+				logValidationWarning("GitStatus validation failed for "+repo.Path, valErr)
+			}
+		}
+	}
+
 	// Filter repositories based on --all flag
 	filterOpts := cli.FilterOptions{ShowAll: allFlag}
 	filteredRepos := cli.FilterRepositories(scanResult.Repositories, filterOpts)
@@ -202,6 +219,11 @@ func runGitree(_ *cobra.Command, _ []string) error {
 	// Build tree structure with filtered repositories
 	root := tree.Build(cwd, filteredRepos, nil)
 
+	// Validate tree structure
+	if valErr := validateTree(root); valErr != nil {
+		logValidationWarning("Tree validation failed", valErr)
+	}
+
 	// Stop spinner before output
 	if !debugFlag {
 		s.Stop()
@@ -213,6 +235,30 @@ func runGitree(_ *cobra.Command, _ []string) error {
 
 	// Print summary statistics
 	printSummary(scanResult, batchResult)
+
+	return nil
+}
+
+// logValidationWarning logs a validation warning to stderr if debug mode is enabled.
+func logValidationWarning(msg string, err error) {
+	if debugFlag {
+		_, _ = fmt.Fprintf(os.Stderr, "[WARN] %s: %v\n", msg, err)
+	}
+}
+
+// validateTree recursively validates all nodes in the tree.
+func validateTree(node *models.TreeNode) error {
+	if node == nil {
+		return nil
+	}
+	if err := node.Validate(); err != nil {
+		return err
+	}
+	for _, child := range node.Children {
+		if err := validateTree(child); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

@@ -242,7 +242,6 @@ func (t *TreeNode) SortChildren() {
 type ScanResult struct {
 	RootPath     string        // Absolute path where scan started
 	Repositories []*Repository // All repositories found during scan
-	Tree         *TreeNode     // Root node of the tree structure
 	TotalScanned int           // Total number of directories scanned
 	TotalRepos   int           // Total number of Git repositories found
 	Errors       []error       // Collection of non-fatal errors
@@ -259,9 +258,6 @@ func (s *ScanResult) Validate() error {
 	}
 	if s.Repositories == nil {
 		return fmt.Errorf("repositories slice cannot be nil: %w", errScanResultValidation)
-	}
-	if s.Tree == nil {
-		return fmt.Errorf("tree cannot be nil: %w", errScanResultValidation)
 	}
 	if s.TotalRepos != len(s.Repositories) {
 		return fmt.Errorf("total repos mismatch: %d != %d: %w", s.TotalRepos, len(s.Repositories), errScanResultValidation)

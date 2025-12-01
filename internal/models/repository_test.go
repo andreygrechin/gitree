@@ -328,13 +328,6 @@ func TestScanResultValidation(t *testing.T) {
 			result: ScanResult{
 				RootPath:     "/home/user",
 				Repositories: []*Repository{},
-				Tree: &TreeNode{
-					Repository: &Repository{
-						Path: "/home/user",
-						Name: "user",
-					},
-					RelativePath: ".",
-				},
 				TotalScanned: 10,
 				TotalRepos:   0,
 				Duration:     100 * time.Millisecond,
@@ -345,13 +338,6 @@ func TestScanResultValidation(t *testing.T) {
 			name: "empty root path",
 			result: ScanResult{
 				Repositories: []*Repository{},
-				Tree: &TreeNode{
-					Repository: &Repository{
-						Path: "/home/user",
-						Name: "user",
-					},
-					RelativePath: ".",
-				},
 			},
 			expectError: true,
 			errorMsg:    "root path cannot be empty",
@@ -361,13 +347,6 @@ func TestScanResultValidation(t *testing.T) {
 			result: ScanResult{
 				RootPath:     "relative/path",
 				Repositories: []*Repository{},
-				Tree: &TreeNode{
-					Repository: &Repository{
-						Path: "/home/user",
-						Name: "user",
-					},
-					RelativePath: ".",
-				},
 			},
 			expectError: true,
 			errorMsg:    "root path must be absolute",
@@ -376,25 +355,9 @@ func TestScanResultValidation(t *testing.T) {
 			name: "nil repositories slice",
 			result: ScanResult{
 				RootPath: "/home/user",
-				Tree: &TreeNode{
-					Repository: &Repository{
-						Path: "/home/user",
-						Name: "user",
-					},
-					RelativePath: ".",
-				},
 			},
 			expectError: true,
 			errorMsg:    "repositories slice cannot be nil",
-		},
-		{
-			name: "nil tree",
-			result: ScanResult{
-				RootPath:     "/home/user",
-				Repositories: []*Repository{},
-			},
-			expectError: true,
-			errorMsg:    "tree cannot be nil",
 		},
 		{
 			name: "total repos mismatch",
@@ -402,13 +365,6 @@ func TestScanResultValidation(t *testing.T) {
 				RootPath: "/home/user",
 				Repositories: []*Repository{
 					{Path: "/home/user/project", Name: "project"},
-				},
-				Tree: &TreeNode{
-					Repository: &Repository{
-						Path: "/home/user",
-						Name: "user",
-					},
-					RelativePath: ".",
 				},
 				TotalRepos: 2, // Mismatch
 			},
@@ -422,13 +378,6 @@ func TestScanResultValidation(t *testing.T) {
 				Repositories: []*Repository{
 					{Path: "/home/user/project", Name: "project"},
 				},
-				Tree: &TreeNode{
-					Repository: &Repository{
-						Path: "/home/user",
-						Name: "user",
-					},
-					RelativePath: ".",
-				},
 				TotalScanned: 0,
 				TotalRepos:   1,
 			},
@@ -440,14 +389,7 @@ func TestScanResultValidation(t *testing.T) {
 			result: ScanResult{
 				RootPath:     "/home/user",
 				Repositories: []*Repository{},
-				Tree: &TreeNode{
-					Repository: &Repository{
-						Path: "/home/user",
-						Name: "user",
-					},
-					RelativePath: ".",
-				},
-				Duration: -1 * time.Second,
+				Duration:     -1 * time.Second,
 			},
 			expectError: true,
 			errorMsg:    "duration cannot be negative",
