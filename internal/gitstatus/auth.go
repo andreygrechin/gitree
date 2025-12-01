@@ -44,6 +44,8 @@ func isHTTPSURL(remoteURL string) bool {
 
 // getAuthForURL returns the appropriate authentication method for a remote URL.
 // Returns nil if no authentication is needed (SSH) or credentials cannot be obtained.
+//
+//nolint:ireturn // Returns transport.AuthMethod interface as required by go-git's Fetch API.
 func getAuthForURL(ctx context.Context, remoteURL string, debug bool) transport.AuthMethod {
 	if !isHTTPSURL(remoteURL) {
 		// SSH URLs don't need explicit auth - go-git uses ssh-agent automatically
