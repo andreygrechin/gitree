@@ -79,7 +79,7 @@ type scanner struct {
 	dirCount     int
 }
 
-var errScanResultValidation = errors.New("scan result validation error")
+var errScanOptValidation = errors.New("scan options validation error")
 
 // Scan recursively scans a directory tree for Git repositories.
 func Scan(ctx context.Context, opts ScanOptions) (*models.ScanResult, error) {
@@ -88,16 +88,16 @@ func Scan(ctx context.Context, opts ScanOptions) (*models.ScanResult, error) {
 	// Validate root path exists
 	info, err := os.Stat(opts.RootPath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot access root path: %w: %w", errScanResultValidation, err)
+		return nil, fmt.Errorf("cannot access root path: %w: %w", errScanOptValidation, err)
 	}
 	if !info.IsDir() {
-		return nil, fmt.Errorf("root path %s is not a directory: %w", opts.RootPath, errScanResultValidation)
+		return nil, fmt.Errorf("root path %s is not a directory: %w", opts.RootPath, errScanOptValidation)
 	}
 
 	// Get absolute path
 	absPath, err := filepath.Abs(opts.RootPath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get absolute path: %w: %w", errScanResultValidation, err)
+		return nil, fmt.Errorf("cannot get absolute path: %w: %w", errScanOptValidation, err)
 	}
 
 	s := &scanner{
