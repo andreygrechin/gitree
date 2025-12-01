@@ -503,26 +503,22 @@ func loadGlobalIgnorePatterns(osFS billy.Filesystem, opts *ExtractOptions) ([]gi
 
 	debugGlobalIgnoreLocations(osFS, homeDir, xdgConfigHome, opts)
 
-	// Try loading from core.excludesfile first from ~/.gitconfig
+	// try loading from core.excludesfile first from ~/.gitconfig
 	gitconfigPatterns, err := gitignore.LoadGlobalPatterns(osFS)
-	if err != nil {
-		if opts.Debug {
-			debugPrintf("Failed to load global gitignore patterns from core.excludesfile in ~/.gitconfig: %v", err)
-		}
-	}
-	if gitconfigPatterns != nil {
+	if err == nil && gitconfigPatterns != nil {
 		if opts.Debug {
 			debugPrintf("Loaded %d patterns from core.excludesfile", len(gitconfigPatterns))
 		}
 
 		return gitconfigPatterns, nil
 	}
-
-	if opts.Debug {
-		debugPrintf("Failed to load global gitignore patterns from core.excludesfile: %v", err)
+	if err != nil {
+		if opts.Debug {
+			debugPrintf("Failed to load global gitignore patterns from core.excludesfile in ~/.gitconfig: %v", err)
+			debugPrintf("Falling back to default global ignore location")
+		}
 	}
 
-	// Fall back to default location
 	return loadDefaultGlobalIgnore(xdgConfigHome, opts)
 }
 
