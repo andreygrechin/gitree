@@ -1,6 +1,8 @@
 package tree
 
 import (
+	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -50,7 +52,8 @@ func Build(rootPath string, repos []*models.Repository, opts *FormatOptions) *mo
 	for _, repo := range repos {
 		relPath, err := filepath.Rel(rootPath, repo.Path)
 		if err != nil {
-			// Skip repos that aren't under root
+			fmt.Fprintf(os.Stderr, "WARN: %s\n", fmt.Sprintf("failed to get relative path: %v", err))
+
 			continue
 		}
 
