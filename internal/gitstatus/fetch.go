@@ -155,6 +155,8 @@ func calculateBackoff(attempt int) time.Duration {
 }
 
 // fetchBatch performs concurrent fetch operations for multiple repositories.
+// Thread-safety note: All FetchStats modifications occur in the main goroutine.
+// The spawned goroutines only communicate via the results channel, so no mutex is needed.
 func fetchBatch(
 	ctx context.Context,
 	repos map[string]*models.Repository,
@@ -216,7 +218,7 @@ func fetchBatch(
 		close(results)
 	}()
 
-	// Collect fetch results
+	// Collect fetch results (runs sequentially after all goroutines are spawned)
 	for r := range results {
 		switch {
 		case r.result.Skipped:
