@@ -1,0 +1,35 @@
+---
+name: fossa
+
+on:
+  # For Branch-Protection check. Only the default branch is supported.
+  branch_protection_rule:
+  # Weekly on Monday at 3 AM UTC
+  pull_request:
+    types: [opened]
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    - cron: 0 3 * * MON
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: fossa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fossa-scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: "Checkout Code"
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+
+      - name: "Run FOSSA Scan"
+        uses: fossas/fossa-action@3ebcea1862c6ffbd5cf1b4d0bd6b3fe7bd6f2cac # v1.7.0
+        with:
+          api-key: ${{secrets.FOSSA_API_KEY}}
