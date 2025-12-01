@@ -5,10 +5,13 @@ on:
   # For Branch-Protection check. Only the default branch is supported.
   branch_protection_rule:
   # Weekly on Monday at 3 AM UTC
-  schedule:
-    - cron: '0 3 * * MON'
+  pull_request:
+    types: [opened]
+    branches: [main]
   push:
     branches: [main]
+  schedule:
+    - cron: 0 3 * * MON
   workflow_dispatch:
 
 permissions: {}
