@@ -44,6 +44,7 @@ const (
 	defaultFetchRetries    = 3
 	maxFilesPerCategory    = 20
 	thresholdSlowOperation = 100 * time.Millisecond
+	maxCommitsToCount      = 100 // Limit commit scanning to prevent unbounded memory usage
 )
 
 var (
@@ -318,42 +319,79 @@ func extractAheadBehind(repo *git.Repository, status *models.GitStatus) error {
 	return nil
 }
 
-// countCommitsBetween counts commits from 'from' that are not in 'to'.
-func countCommitsBetween(repo *git.Repository, from, to *object.Commit) (int, error) {
-	// Get all commits reachable from 'to'
-	toCommits := make(map[plumbing.Hash]bool)
-	iter, err := repo.Log(&git.LogOptions{From: to.Hash})
+// countCommitsBetween counts commits from 'from' to the merge-base with 'to'.
+// Uses BFS to properly handle merge commits.
+func countCommitsBetween(_ *git.Repository, from, to *object.Commit) (count int, err error) {
+	// Find merge-base (common ancestor)
+	mergeBaseCommits, err := from.MergeBase(to)
 	if err != nil {
-		return 0, err
-	}
-	defer iter.Close()
-
-	err = iter.ForEach(func(c *object.Commit) error {
-		toCommits[c.Hash] = true
-
-		return nil
-	})
-	if err != nil {
-		return 0, fmt.Errorf("failed to iterate over commits: %w", err)
+		return 0, fmt.Errorf("failed to find merge-base: %w", err)
 	}
 
-	// Count commits reachable from 'from' that are not in 'to'
-	count := 0
-	iter, err = repo.Log(&git.LogOptions{From: from.Hash})
-	if err != nil {
-		return 0, err
+	if len(mergeBaseCommits) == 0 {
+		// No common ancestor - count all commits from 'from' (up to limit)
+		return countCommitsToRoot(from)
 	}
-	defer iter.Close()
 
-	err = iter.ForEach(func(c *object.Commit) error {
-		if !toCommits[c.Hash] {
-			count++
+	// Build set of merge-base hashes for quick lookup
+	mergeBaseSet := make(map[plumbing.Hash]bool)
+	for _, mb := range mergeBaseCommits {
+		mergeBaseSet[mb.Hash] = true
+	}
+
+	// BFS to count all commits reachable from 'from' until merge-base
+	visited := make(map[plumbing.Hash]bool)
+	queue := []*object.Commit{from}
+
+	for len(queue) > 0 && count < maxCommitsToCount {
+		commit := queue[0]
+		queue = queue[1:]
+
+		// Skip if already visited or is a merge-base
+		if visited[commit.Hash] || mergeBaseSet[commit.Hash] {
+			continue
 		}
 
-		return nil
-	})
-	if err != nil {
-		return 0, err
+		visited[commit.Hash] = true
+		count++
+
+		// Add all parents to queue
+		for i := range commit.NumParents() {
+			parent, parentErr := commit.Parent(i)
+			if parentErr != nil {
+				continue
+			}
+
+			if !visited[parent.Hash] && !mergeBaseSet[parent.Hash] {
+				queue = append(queue, parent)
+			}
+		}
+	}
+
+	return count, nil
+}
+
+// countCommitsToRoot counts commits from a commit to root (up to limit).
+func countCommitsToRoot(from *object.Commit) (int, error) {
+	count := 0
+	commit := from
+
+	for commit != nil {
+		count++
+		if count >= maxCommitsToCount {
+			break
+		}
+
+		if commit.NumParents() == 0 {
+			break
+		}
+
+		parent, parentErr := commit.Parent(0)
+		if parentErr != nil {
+			return count, nil //nolint:nilerr // Intentionally return partial count
+		}
+
+		commit = parent
 	}
 
 	return count, nil

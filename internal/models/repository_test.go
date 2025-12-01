@@ -622,6 +622,34 @@ func TestGitStatusFormat(t *testing.T) {
 			expected: "[[ feature | ↑3 ↓2 $ * ]]",
 		},
 		{
+			name: "ahead exceeded limit",
+			status: GitStatus{
+				Branch:    "feature",
+				HasRemote: true,
+				Ahead:     maxCommitsToCount + 1,
+			},
+			expected: "[[ feature | ↑99+ ]]",
+		},
+		{
+			name: "behind exceeded limit",
+			status: GitStatus{
+				Branch:    "feature",
+				HasRemote: true,
+				Behind:    maxCommitsToCount + 1,
+			},
+			expected: "[[ feature | ↓99+ ]]",
+		},
+		{
+			name: "both ahead and behind exceeded",
+			status: GitStatus{
+				Branch:    "feature",
+				HasRemote: true,
+				Ahead:     maxCommitsToCount + 1,
+				Behind:    maxCommitsToCount + 1,
+			},
+			expected: "[[ feature | ↑99+ ↓99+ ]]",
+		},
+		{
 			name: "with error",
 			status: GitStatus{
 				Branch:    "main",

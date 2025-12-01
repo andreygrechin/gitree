@@ -11,6 +11,8 @@ import (
 	"github.com/fatih/color"
 )
 
+const maxCommitsToCount = 99
+
 // Package-level color functions for status formatting.
 //
 //nolint:gochecknoglobals // These are immutable color functions, safe for concurrent use.
@@ -126,12 +128,7 @@ func (g *GitStatus) Format() string {
 
 	// Ahead/Behind: green/red, or gray no-remote indicator
 	if g.HasRemote {
-		if g.Ahead > 0 {
-			parts = append(parts, greenColor(fmt.Sprintf("↑%d", g.Ahead)))
-		}
-		if g.Behind > 0 {
-			parts = append(parts, redColor(fmt.Sprintf("↓%d", g.Behind)))
-		}
+		parts = append(parts, g.formatAheadBehind()...)
 	} else if g.Error == "" {
 		// Only show no-remote indicator if there's no error
 		parts = append(parts, yellowColor("○"))
@@ -175,6 +172,26 @@ func (g *GitStatus) Format() string {
 	}
 
 	return result
+}
+
+// formatAheadBehind returns formatted ahead/behind indicators.
+func (g *GitStatus) formatAheadBehind() []string {
+	var parts []string
+
+	if g.Ahead > 0 && g.Ahead <= maxCommitsToCount {
+		parts = append(parts, greenColor(fmt.Sprintf("↑%d", g.Ahead)))
+	}
+	if g.Ahead > maxCommitsToCount {
+		parts = append(parts, greenColor(fmt.Sprintf("↑%d+", maxCommitsToCount)))
+	}
+	if g.Behind > 0 && g.Behind <= maxCommitsToCount {
+		parts = append(parts, redColor(fmt.Sprintf("↓%d", g.Behind)))
+	}
+	if g.Behind > maxCommitsToCount {
+		parts = append(parts, redColor(fmt.Sprintf("↓%d+", maxCommitsToCount)))
+	}
+
+	return parts
 }
 
 // TreeNode represents a node in the hierarchical tree structure.
