@@ -1,3 +1,5 @@
+//go:build !windows
+
 package scanner
 
 import (
@@ -117,13 +119,9 @@ func Scan(ctx context.Context, opts ScanOptions) (*models.ScanResult, error) {
 		return nil, fmt.Errorf("error walking directory tree: %w", err)
 	}
 
-	// Build tree structure from flat repository list
-	tree := s.buildTree()
-
 	result := &models.ScanResult{
 		RootPath:     absPath,
 		Repositories: s.repositories,
-		Tree:         tree,
 		TotalScanned: s.dirCount,
 		TotalRepos:   len(s.repositories),
 		Errors:       s.errors,
@@ -258,58 +256,4 @@ func (s *scanner) shouldVisit(path string) (shouldVisit, isSymlink bool, err err
 	s.visited[inode] = true
 
 	return true, isSymlink, nil
-}
-
-// buildTree creates a TreeNode structure from flat repository list.
-func (s *scanner) buildTree() *models.TreeNode {
-	if len(s.repositories) == 0 {
-		// No repositories found - create empty root node
-		return &models.TreeNode{
-			Repository: &models.Repository{
-				Path: s.rootPath,
-				Name: filepath.Base(s.rootPath),
-			},
-			Depth:        0,
-			IsLast:       true,
-			Children:     []*models.TreeNode{},
-			RelativePath: ".",
-		}
-	}
-
-	// For now, create a simple flat tree
-	// This will be enhanced in the tree formatter phase
-	// Each repository becomes a root-level node
-
-	root := &models.TreeNode{
-		Repository: &models.Repository{
-			Path: s.rootPath,
-			Name: filepath.Base(s.rootPath),
-		},
-		Depth:        0,
-		IsLast:       false,
-		Children:     make([]*models.TreeNode, 0),
-		RelativePath: ".",
-	}
-
-	for _, repo := range s.repositories {
-		relPath, err := filepath.Rel(s.rootPath, repo.Path)
-		if err != nil {
-			relPath = repo.Path
-		}
-
-		node := &models.TreeNode{
-			Repository:   repo,
-			Depth:        1,
-			IsLast:       false,
-			Children:     []*models.TreeNode{},
-			RelativePath: relPath,
-		}
-
-		root.Children = append(root.Children, node)
-	}
-
-	// Sort children and mark last
-	root.SortChildren()
-
-	return root
 }
