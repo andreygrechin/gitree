@@ -88,7 +88,7 @@ func Scan(ctx context.Context, opts ScanOptions) (*models.ScanResult, error) {
 	// Validate root path exists
 	info, err := os.Stat(opts.RootPath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot access root path: %w: %w", errScanOptValidation, err)
+		return nil, fmt.Errorf("invalid scan options: cannot access root path: %w", err)
 	}
 	if !info.IsDir() {
 		return nil, fmt.Errorf("root path %s is not a directory: %w", opts.RootPath, errScanOptValidation)
@@ -97,7 +97,7 @@ func Scan(ctx context.Context, opts ScanOptions) (*models.ScanResult, error) {
 	// Get absolute path
 	absPath, err := filepath.Abs(opts.RootPath)
 	if err != nil {
-		return nil, fmt.Errorf("cannot get absolute path: %w: %w", errScanOptValidation, err)
+		return nil, fmt.Errorf("invalid scan options: cannot get absolute path: %w", err)
 	}
 
 	s := &scanner{

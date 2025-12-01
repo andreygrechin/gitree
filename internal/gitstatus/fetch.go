@@ -19,8 +19,6 @@ const (
 	backoffExponentTwo = 2 // Base for exponential backoff calculation.
 )
 
-var errFetchFailed = errors.New("fetch failed after retries")
-
 // FetchResult represents the result of a fetch operation.
 type FetchResult struct {
 	Success bool
@@ -123,7 +121,7 @@ func fetchFromOrigin(ctx context.Context, repoPath string, opts *ExtractOptions)
 		}
 	}
 
-	result.Error = fmt.Errorf("%w: %w", errFetchFailed, lastErr)
+	result.Error = fmt.Errorf("fetch failed after retries: %w", lastErr)
 
 	return result
 }

@@ -242,7 +242,7 @@ func runGitree(_ *cobra.Command, _ []string) error {
 // logValidationWarning logs a validation warning to stderr if debug mode is enabled.
 func logValidationWarning(msg string, err error) {
 	if debugFlag {
-		_, _ = fmt.Fprintf(os.Stderr, "[WARN] %s: %v\n", msg, err)
+		_, _ = fmt.Fprintf(os.Stderr, "WARN: %s: %v\n", msg, err)
 	}
 }
 
