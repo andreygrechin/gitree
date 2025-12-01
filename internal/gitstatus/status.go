@@ -51,6 +51,16 @@ var (
 	errGitignorePathNotAbsolute = errors.New("gitignore path must be absolute")
 )
 
+// checkContext returns an error if the context has been canceled.
+func checkContext(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		return nil
+	}
+}
+
 // debugPrintf formats the message using fmt.Sprintf, adds a "DEBUG: " prefix, and outputs it to stderr.
 func debugPrintf(format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
@@ -89,7 +99,7 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions, ignoreP
 	errorChan := make(chan error, 1)
 
 	go func() {
-		status, err := extractGitStatus(repoPath, opts, ignorePatterns)
+		status, err := extractGitStatus(ctx, repoPath, opts, ignorePatterns)
 		if err != nil {
 			errorChan <- err
 
@@ -122,13 +132,21 @@ func Extract(ctx context.Context, repoPath string, opts *ExtractOptions, ignoreP
 }
 
 // extractGitStatus performs the actual Git status extraction.
-func extractGitStatus(repoPath string, opts *ExtractOptions, ignorePatterns []gitignore.Pattern) (*models.GitStatus, error) {
+// It checks for context cancellation between expensive operations to allow early termination.
+func extractGitStatus(
+	ctx context.Context, repoPath string, opts *ExtractOptions, ignorePatterns []gitignore.Pattern,
+) (*models.GitStatus, error) {
 	startTime := time.Now()
 
 	// Open repository
 	repo, err := git.PlainOpen(repoPath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open repository: %w", err)
+	}
+
+	// Check for cancellation after opening repository
+	if err := checkContext(ctx); err != nil {
+		return nil, err
 	}
 
 	status := &models.GitStatus{}
@@ -145,6 +163,11 @@ func extractGitStatus(repoPath string, opts *ExtractOptions, ignorePatterns []gi
 		status.HasRemote = false
 	}
 
+	// Check for cancellation before expensive ahead/behind calculation
+	if err := checkContext(ctx); err != nil {
+		return nil, err
+	}
+
 	// Extract ahead/behind counts if remote exists
 	if status.HasRemote {
 		if err := extractAheadBehind(repo, status); err != nil {
@@ -157,6 +180,11 @@ func extractGitStatus(repoPath string, opts *ExtractOptions, ignorePatterns []gi
 
 	// Check for stashes
 	status.HasStashes = extractStashes(repo)
+
+	// Check for cancellation before expensive worktree status scan
+	if err := checkContext(ctx); err != nil {
+		return nil, err
+	}
 
 	// Check for uncommitted changes
 	if err := extractUncommittedChanges(repo, status, opts, ignorePatterns); err != nil {

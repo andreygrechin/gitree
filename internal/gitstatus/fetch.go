@@ -176,6 +176,10 @@ func fetchBatch(
 	var wg sync.WaitGroup
 
 	for path, repo := range repos {
+		// Skip nil repositories
+		if repo == nil {
+			continue
+		}
 		// Skip bare repositories - they typically don't have working trees to fetch into
 		if repo.IsBare {
 			batchResult.FetchStats.Skipped++
