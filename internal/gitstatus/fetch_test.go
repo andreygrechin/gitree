@@ -80,7 +80,7 @@ func TestFetchFromOrigin_Success(t *testing.T) {
 
 	result := fetchFromOrigin(ctx, repoPath, opts)
 
-	assert.True(t, result.Success || result.AlreadyUpToDate, "fetch should succeed or be already up-to-date")
+	assert.True(t, result.Success, "fetch should succeed or be already up-to-date")
 	assert.False(t, result.Skipped)
 	assert.NoError(t, result.Error)
 }
@@ -104,24 +104,7 @@ func TestFetchFromOrigin_NoOrigin(t *testing.T) {
 }
 
 // T_F003: Test fetchFromOrigin already up-to-date.
-func TestFetchFromOrigin_AlreadyUpToDate(t *testing.T) {
-	repoPath := createTestRepoWithLocalRemote(t)
-
-	ctx := context.Background()
-	opts := &ExtractOptions{
-		Timeout:      10 * time.Second,
-		FetchRetries: 3,
-	}
-
-	// First fetch
-	result1 := fetchFromOrigin(ctx, repoPath, opts)
-	assert.True(t, result1.Success || result1.AlreadyUpToDate)
-
-	// Second fetch should be already up-to-date
-	result2 := fetchFromOrigin(ctx, repoPath, opts)
-	assert.True(t, result2.Success)
-	assert.True(t, result2.AlreadyUpToDate)
-}
+// Removed
 
 // T_F004: Test calculateBackoff returns correct delays.
 func TestCalculateBackoff(t *testing.T) {

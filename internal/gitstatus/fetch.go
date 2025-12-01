@@ -23,11 +23,10 @@ var errFetchFailed = errors.New("fetch failed after retries")
 
 // FetchResult represents the result of a fetch operation.
 type FetchResult struct {
-	Success         bool
-	AlreadyUpToDate bool
-	Skipped         bool
-	Error           error
-	Retries         int
+	Success bool
+	Skipped bool
+	Error   error
+	Retries int
 }
 
 // fetchFromOrigin fetches from the origin remote with retry logic.
@@ -59,6 +58,8 @@ func fetchFromOrigin(ctx context.Context, repoPath string, opts *ExtractOptions)
 
 		return result
 	}
+
+	remoteURL := remoteConfig.URLs[0]
 
 	// Perform fetch with retries
 	maxRetries := opts.FetchRetries
@@ -96,7 +97,7 @@ func fetchFromOrigin(ctx context.Context, repoPath string, opts *ExtractOptions)
 		}
 
 		// Perform fetch with timeout
-		fetchErr := performFetch(ctx, repo, opts)
+		fetchErr := performFetch(ctx, repo, remoteURL, opts)
 		if fetchErr == nil {
 			result.Success = true
 
@@ -106,7 +107,6 @@ func fetchFromOrigin(ctx context.Context, repoPath string, opts *ExtractOptions)
 		// Check for "already up-to-date" - this is success, not error
 		if errors.Is(fetchErr, git.NoErrAlreadyUpToDate) {
 			result.Success = true
-			result.AlreadyUpToDate = true
 
 			return result
 		}
@@ -129,7 +129,7 @@ func fetchFromOrigin(ctx context.Context, repoPath string, opts *ExtractOptions)
 }
 
 // performFetch executes a single fetch operation with timeout.
-func performFetch(ctx context.Context, repo *git.Repository, opts *ExtractOptions) error {
+func performFetch(ctx context.Context, repo *git.Repository, remoteURL string, opts *ExtractOptions) error {
 	fetchCtx := ctx
 	if opts.Timeout > 0 {
 		var cancel context.CancelFunc
@@ -137,8 +137,12 @@ func performFetch(ctx context.Context, repo *git.Repository, opts *ExtractOption
 		defer cancel()
 	}
 
+	// Get authentication for HTTPS URLs
+	auth := getAuthForURL(fetchCtx, remoteURL, opts.Debug)
+
 	return repo.FetchContext(fetchCtx, &git.FetchOptions{
 		RemoteName: originRemote,
+		Auth:       auth,
 	})
 }
 
