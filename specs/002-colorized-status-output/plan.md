@@ -11,7 +11,7 @@ Add colorization to the Git status output in gitree to improve visual hierarchy 
 
 ## Technical Context
 
-**Language/Version**: Go 1.25.4
+**Language/Version**: Go 1.25.5
 **Primary Dependencies**: fatih/color (already present via go-git dependencies) or golang.org/x/term for color support
 **Storage**: N/A
 **Testing**: Go testing framework (existing test structure in `internal/*/`)

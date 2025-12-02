@@ -11,8 +11,9 @@ Add a `--debug` CLI flag to enable diagnostic output explaining git status deter
 
 ## Technical Context
 
-**Language/Version**: Go 1.25.4
+**Language/Version**: Go 1.25.5
 **Primary Dependencies**:
+
 - `github.com/spf13/cobra v1.10.1` (CLI flag parsing)
 - `github.com/go-git/go-git/v5 v5.16.3` (git operations)
 - `github.com/fatih/color v1.18.0` (color output)
@@ -24,6 +25,7 @@ Add a `--debug` CLI flag to enable diagnostic output explaining git status deter
 **Project Type**: Single Go CLI application
 **Performance Goals**: Debug output must not add >5% overhead when disabled, <50ms per repository when enabled
 **Constraints**:
+
 - Must use fmt.Fprintln/fmt.Fprint only (no logging frameworks per spec FR-006)
 - Debug output to stderr only (FR-005)
 - Must respect --no-color flag (FR-007)
@@ -37,22 +39,27 @@ Add a `--debug` CLI flag to enable diagnostic output explaining git status deter
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
 ### ✅ Principle I: Library-First
+
 **Status**: COMPLIANT
 **Rationale**: Debug logging will be implemented as functionality within existing libraries (`internal/scanner`, `internal/gitstatus`). The feature enhances existing modular packages rather than creating organizational-only code.
 
 ### ✅ Principle II: CLI Interface
+
 **Status**: COMPLIANT
 **Rationale**: Feature exposes debug capability via CLI flag (`--debug`) following existing CLI conventions. Output to stderr maintains text protocol separation (data to stdout, diagnostics to stderr).
 
 ### ✅ Principle III: Test-First (NON-NEGOTIABLE)
+
 **Status**: COMPLIANT
 **Rationale**: Will write tests before implementation in Phase 2 (tasks.md). Tests will verify debug output appears when flag enabled, is absent when disabled, respects --no-color, disables spinner, and includes expected diagnostic details.
 
 ### ✅ Principle IV: Observability
+
 **Status**: COMPLIANT
 **Rationale**: This feature IS observability. It adds debuggability through text I/O design (stderr output) and diagnostic information accessible without special tools. Aligns perfectly with constitutional observability mandate.
 
 ### ✅ Principle V: Simplicity
+
 **Status**: COMPLIANT
 **Rationale**: Uses simplest approach: boolean flag, fmt.Fprintln, no frameworks. Avoids complexity of structured logging, multiple verbosity levels, or configuration files. Follows YAGNI - only on/off debug needed.
 
