@@ -9,7 +9,7 @@ Quick reference guide for developers implementing the debug logging feature. Fol
 
 ## Prerequisites
 
-- Go 1.25.4 installed
+- Go 1.25.5 installed
 - Gitree repository cloned
 - Familiarity with cobra CLI framework
 - Understanding of go-git library basics

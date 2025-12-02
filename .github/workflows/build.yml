@@ -24,7 +24,7 @@ jobs:
       contents: read
       pull-requests: read
     with:
-      go-version: "1.25.4"
+      go-version: "1.25.5"
 
   lint:
     timeout-minutes: 10
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        go-version: ["1.25.4"]
+        go-version: ["1.25.5"]
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
@@ -68,7 +68,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        go-version: ["1.25.4"]
+        go-version: ["1.25.5"]
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 

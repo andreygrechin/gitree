@@ -11,7 +11,7 @@ Add Cobra CLI framework to gitree with three flags: `--version` (display version
 
 ## Technical Context
 
-**Language/Version**: Go 1.25.4
+**Language/Version**: Go 1.25.5
 **Primary Dependencies**:
 
 - `github.com/spf13/cobra` v1.10.1 (existing)
