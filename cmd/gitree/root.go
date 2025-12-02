@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -23,6 +24,8 @@ const (
 	spinnerChar           = 11
 	defaultContextTimeout = 5 * time.Minute
 )
+
+var errInvalidFlags = errors.New("invalid flag value")
 
 //nolint:gochecknoglobals // CLI flags and root command
 var (
@@ -88,13 +91,17 @@ func handleGlobalFlags(_ *cobra.Command, _ []string) {
 	}
 }
 
-// handleVersionFlag handles the --version flag with precedence over other operations.
+// handleVersionFlag handles the --version flag with precedence over other operations and validates flag values.
 func handleVersionFlag(cmd *cobra.Command, _ []string) error {
 	if versionFlag {
 		displayVersion(cmd)
 		// Exit after displaying version (prevents further execution)
 		// Note: In tests, this will be caught by cmd.Execute() returning nil
 		return exitAfterVersion()
+	}
+
+	if maxConcurrentFlag < 1 {
+		return fmt.Errorf("%w: --max-concurrent must be at least 1, got %d", errInvalidFlags, maxConcurrentFlag)
 	}
 
 	return nil
@@ -111,7 +118,7 @@ func formatVersion(ver, cmt, btime string) string {
 	return fmt.Sprintf("gitree version %s\n  commit: %s\n  built:  %s", ver, cmt, btime)
 }
 
-func runGitree(_ *cobra.Command, args []string) error {
+func runGitree(_ *cobra.Command, args []string) error { //nolint:gocognit // Main command logic
 	// Determine target directory
 	var targetDir string
 	if len(args) > 0 {
