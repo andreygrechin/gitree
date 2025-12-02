@@ -17,7 +17,9 @@ The optional `directory` argument specifies which directory to scan (defaults to
 - `--version, -v`: Display version, commit hash, and build time
 - `--no-color`: Disable color output (also respects NO_COLOR environment variable)
 - `--all, -a`: Show all repositories including clean ones (default shows only repos needing attention)
-- `--max-concurrent, -c`: Maximum concurrent git operations (default: 50)
+- `--max-concurrent, -c`: Maximum concurrent git operations (default 50)
+- `--debug`: Enable debug output
+- `--no-fetch`: Skip fetching from remote (use local refs only)
 - `--help, -h`: Display help information
 
 ## Build & Development Commands

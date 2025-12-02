@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/andreygrechin/gitree/internal/cli"
@@ -24,8 +25,6 @@ const (
 	spinnerChar           = 11
 	defaultContextTimeout = 5 * time.Minute
 )
-
-var errInvalidFlags = errors.New("invalid flag value")
 
 //nolint:gochecknoglobals // CLI flags and root command
 var (
@@ -65,6 +64,11 @@ Use --all to show all repositories including clean ones.`,
 	}
 )
 
+var (
+	errInvalidFlags = errors.New("invalid flag value")
+	errInvalidArgs  = errors.New("invalid argument value")
+)
+
 func init() { //nolint:gochecknoinits // Cobra CLI initialization
 	rootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "Display version information")
 	rootCmd.Flags().BoolVar(&noColorFlag, "no-color", false, "Disable color output")
@@ -101,7 +105,7 @@ func handleVersionFlag(cmd *cobra.Command, _ []string) error {
 	}
 
 	if maxConcurrentFlag < 1 {
-		return fmt.Errorf("%w: --max-concurrent must be at least 1, got %d", errInvalidFlags, maxConcurrentFlag)
+		return fmt.Errorf("%w: flag --max-concurrent must be at least 1, got %d", errInvalidFlags, maxConcurrentFlag)
 	}
 
 	return nil
@@ -129,6 +133,26 @@ func runGitree(_ *cobra.Command, args []string) error { //nolint:gocognit // Mai
 			return fmt.Errorf("unable to get current directory: %w", err)
 		}
 		targetDir = cwd
+	}
+
+	// Validate directory exists and is accessible
+	info, err := os.Stat(targetDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return fmt.Errorf("%w: directory does not exist: %s", errInvalidArgs, targetDir)
+		}
+
+		return fmt.Errorf("%w: cannot access directory: %s: %w", errInvalidArgs, targetDir, err)
+	}
+
+	if !info.IsDir() {
+		return fmt.Errorf("%w: not a directory: %s", errInvalidArgs, targetDir)
+	}
+
+	// Convert to absolute path for consistent handling
+	targetDir, err = filepath.Abs(targetDir)
+	if err != nil {
+		return fmt.Errorf("%w: cannot resolve absolute path: %w", errInvalidArgs, err)
 	}
 
 	// Initialize spinner
