@@ -8,11 +8,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Default Behavior**: By default, gitree only shows repositories needing attention (uncommitted changes, non-main/master branches, ahead/behind remote, stashes, or no remote tracking). Use `--all` flag to show all repositories including clean ones.
 
+**Usage**: `gitree [directory] [flags]`
+
+The optional `directory` argument specifies which directory to scan (defaults to current directory).
+
 **Available Flags**:
 
 - `--version, -v`: Display version, commit hash, and build time
 - `--no-color`: Disable color output (also respects NO_COLOR environment variable)
 - `--all, -a`: Show all repositories including clean ones (default shows only repos needing attention)
+- `--max-concurrent, -c`: Maximum concurrent git operations (default 50)
+- `--debug`: Enable debug output
+- `--no-fetch`: Skip fetching from remote (use local refs only)
 - `--help, -h`: Display help information
 
 ## Build & Development Commands
@@ -94,7 +101,7 @@ make clean              # Remove build artifacts and caches
 ### Concurrency Model
 
 - Main program uses context with 5-minute timeout
-- Git status extraction uses worker pool pattern with semaphore (default: 10 concurrent)
+- Git status extraction uses worker pool pattern with semaphore (default: 50 concurrent, configurable via `--max-concurrent`)
 - Each repository status extraction has individual timeout (default: 10s)
 - All operations respect context cancellation
 
@@ -119,7 +126,7 @@ make clean              # Remove build artifacts and caches
 - Uses golangci-lint with extensive linters enabled
 - Line length limit: 140 characters
 - Error wrapping: use `fmt.Errorf("message: %w", err)` with sentinel errors
-- Constants: defined at package level with descriptive names (e.g., `defaultTimeout`, `maxConcurrentRequests`)
+- Constants: defined at package level with descriptive names (e.g., `defaultTimeout`, `defaultMaxConcurrent`)
 - Structured logging: currently prints to stderr/stdout directly (spinner to stderr, output to stdout)
 
 ## Dependencies

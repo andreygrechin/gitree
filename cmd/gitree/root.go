@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/andreygrechin/gitree/internal/cli"
@@ -18,7 +20,7 @@ import (
 
 const (
 	defaultTimeout        = 10 * time.Second
-	maxConcurrentRequests = 10
+	defaultMaxConcurrent  = 50
 	spinnerDelay          = 100 * time.Millisecond
 	spinnerChar           = 11
 	defaultContextTimeout = 5 * time.Minute
@@ -27,18 +29,19 @@ const (
 //nolint:gochecknoglobals // CLI flags and root command
 var (
 	// Flags.
-	versionFlag bool
-	noColorFlag bool
-	allFlag     bool
-	debugFlag   bool
-	noFetchFlag bool
+	versionFlag       bool
+	noColorFlag       bool
+	allFlag           bool
+	debugFlag         bool
+	noFetchFlag       bool
+	maxConcurrentFlag int
 
 	// Root command.
 	rootCmd = &cobra.Command{
-		Use:   "gitree",
+		Use:   "gitree [directory]",
 		Short: "Recursively scan directories for Git repositories and display them in a tree structure",
-		Long: `gitree scans the current directory and its subdirectories for Git repositories,
-displays them in a tree structure with status information.
+		Long: `gitree scans the specified directory (or current directory if not provided) and its
+subdirectories for Git repositories, displays them in a tree structure with status information.
 
 By default, gitree fetches from origin remote before calculating ahead/behind
 counts. Use --no-fetch to skip fetching and use local refs only.
@@ -46,6 +49,7 @@ counts. Use --no-fetch to skip fetching and use local refs only.
 By default, only repositories needing attention are shown (uncommitted changes,
 non-main/master branches, ahead/behind remote, stashes, or no remote tracking).
 Use --all to show all repositories including clean ones.`,
+		Args:          cobra.MaximumNArgs(1),
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		RunE:          runGitree,
@@ -60,6 +64,11 @@ Use --all to show all repositories including clean ones.`,
 	}
 )
 
+var (
+	errInvalidFlags = errors.New("invalid flag value")
+	errInvalidArgs  = errors.New("invalid argument value")
+)
+
 func init() { //nolint:gochecknoinits // Cobra CLI initialization
 	rootCmd.Flags().BoolVarP(&versionFlag, "version", "v", false, "Display version information")
 	rootCmd.Flags().BoolVar(&noColorFlag, "no-color", false, "Disable color output")
@@ -68,6 +77,8 @@ func init() { //nolint:gochecknoinits // Cobra CLI initialization
 	rootCmd.Flags().BoolVar(&debugFlag, "debug", false, "Enable debug output")
 	rootCmd.Flags().BoolVar(&noFetchFlag, "no-fetch", false,
 		"Skip fetching from remote (use local refs only)")
+	rootCmd.Flags().IntVarP(&maxConcurrentFlag, "max-concurrent", "c", defaultMaxConcurrent,
+		"Maximum concurrent git operations")
 
 	// Set PersistentPreRun to handle global flags (color suppression)
 	rootCmd.PersistentPreRun = handleGlobalFlags
@@ -84,13 +95,17 @@ func handleGlobalFlags(_ *cobra.Command, _ []string) {
 	}
 }
 
-// handleVersionFlag handles the --version flag with precedence over other operations.
+// handleVersionFlag handles the --version flag with precedence over other operations and validates flag values.
 func handleVersionFlag(cmd *cobra.Command, _ []string) error {
 	if versionFlag {
 		displayVersion(cmd)
 		// Exit after displaying version (prevents further execution)
 		// Note: In tests, this will be caught by cmd.Execute() returning nil
 		return exitAfterVersion()
+	}
+
+	if maxConcurrentFlag < 1 {
+		return fmt.Errorf("%w: flag --max-concurrent must be at least 1, got %d", errInvalidFlags, maxConcurrentFlag)
 	}
 
 	return nil
@@ -107,11 +122,37 @@ func formatVersion(ver, cmt, btime string) string {
 	return fmt.Sprintf("gitree version %s\n  commit: %s\n  built:  %s", ver, cmt, btime)
 }
 
-func runGitree(_ *cobra.Command, _ []string) error {
-	// Get current working directory
-	cwd, err := os.Getwd()
+func runGitree(_ *cobra.Command, args []string) error { //nolint:gocognit // Main command logic
+	// Determine target directory
+	var targetDir string
+	if len(args) > 0 {
+		targetDir = args[0]
+	} else {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return fmt.Errorf("unable to get current directory: %w", err)
+		}
+		targetDir = cwd
+	}
+
+	// Validate directory exists and is accessible
+	info, err := os.Stat(targetDir)
 	if err != nil {
-		return fmt.Errorf("unable to get current directory: %w", err)
+		if os.IsNotExist(err) {
+			return fmt.Errorf("%w: directory does not exist: %s", errInvalidArgs, targetDir)
+		}
+
+		return fmt.Errorf("%w: cannot access directory: %s: %w", errInvalidArgs, targetDir, err)
+	}
+
+	if !info.IsDir() {
+		return fmt.Errorf("%w: not a directory: %s", errInvalidArgs, targetDir)
+	}
+
+	// Convert to absolute path for consistent handling
+	targetDir, err = filepath.Abs(targetDir)
+	if err != nil {
+		return fmt.Errorf("%w: cannot resolve absolute path: %w", errInvalidArgs, err)
 	}
 
 	// Initialize spinner
@@ -129,7 +170,7 @@ func runGitree(_ *cobra.Command, _ []string) error {
 
 	// Scan for repositories
 	scanOpts := scanner.ScanOptions{
-		RootPath: cwd,
+		RootPath: targetDir,
 		Debug:    debugFlag,
 	}
 	scanResult, err := scanner.Scan(ctx, scanOpts)
@@ -174,7 +215,7 @@ func runGitree(_ *cobra.Command, _ []string) error {
 	// Extract Git status concurrently (with fetch if enabled)
 	statusOpts := &gitstatus.ExtractOptions{
 		Timeout:        defaultTimeout,
-		MaxConcurrency: maxConcurrentRequests,
+		MaxConcurrency: maxConcurrentFlag,
 		Debug:          debugFlag,
 		Fetch:          !noFetchFlag,
 	}
@@ -217,7 +258,7 @@ func runGitree(_ *cobra.Command, _ []string) error {
 	}
 
 	// Build tree structure with filtered repositories
-	root := tree.Build(cwd, filteredRepos, nil)
+	root := tree.Build(targetDir, filteredRepos, nil)
 
 	// Validate tree structure
 	if valErr := validateTree(root); valErr != nil {
