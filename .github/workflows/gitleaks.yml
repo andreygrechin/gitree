@@ -3,7 +3,6 @@ name: gitleaks
 
 on:
   pull_request:
-    branches: ["main"]
   push:
     branches: ["main"]
   schedule:
