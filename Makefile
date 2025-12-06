@@ -1,4 +1,4 @@
-.PHONY: all build format fmt lint security test-coverage test-coverage-report test-race release check_clean clean help
+.PHONY: all build format fmt lint security test-coverage test-coverage-report test-race fuzz fuzz-long release check_clean clean help
 
 # Build variables
 VERSION    := $(shell git describe --tags --always --dirty)
@@ -33,6 +33,11 @@ security:
 	gosec ./...
 	govulncheck
 
+test:
+	go test ./...
+
+test-all: test test-coverage test-race test-fuzz
+
 test-coverage:
 	rm -fr "${GOCOVERDIR}" && mkdir -p "${GOCOVERDIR}"
 	go test -coverprofile="${GOCOVERDIR}/cover.out" ./...
@@ -42,11 +47,12 @@ test-coverage-report: test-coverage
 	go tool cover -html="${GOCOVERDIR}/cover.out"
 	go tool cover -html="${GOCOVERDIR}/cover.out" -o "${GOCOVERDIR}/coverage.html"
 
-test:
-	go test ./...
-
 test-race:
-	go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+	go test -race ./...
+
+test-fuzz:
+	go test -fuzz=FuzzGitStatusFormat -fuzztime=15s ./internal/models/
+	go test -fuzz=FuzzGitStatusValidate -fuzztime=15s ./internal/models/
 
 check_clean:
 	@if [ -n "$(shell git status --porcelain)" ]; then \
