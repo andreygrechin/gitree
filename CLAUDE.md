@@ -33,8 +33,8 @@ make build              # Build binary to bin/gitree
 ### Testing
 
 ```bash
-make test               # Run all tests
-go test ./...           # Alternative: run all tests
+make test               # Run mandatory tests
+go test ./...           # Alternative: run mandatory tests
 go test -run TestName ./internal/scanner  # Run specific test
 ```
 
@@ -46,11 +46,18 @@ make format             # Format code with gofumpt and auto-fix some issues
 make security           # Run security checks (gosec, govulncheck)
 ```
 
-### Coverage
+### Test Coverage
 
 ```bash
 make test-coverage         # Generate unit test coverage report (outputs to ./coverage/)
 make test-coverage-report  # Generate HTML coverage report
+```
+
+### Optional Testing
+
+```bash
+make test-race          # Run tests with race detector
+make test-fuzz          # Run fuzz tests (30s per test, for CI)
 ```
 
 ### Release
@@ -117,6 +124,7 @@ make clean              # Remove build artifacts and caches
 - Scanner tests: use temp directories with actual Git repos
 - Git status tests: create test repos with various states
 - Formatter tests: verify tree structure and ASCII output
+- Fuzz tests: `*_fuzz_test.go` files test functions with random inputs to find panics
 - Use `t.TempDir()` for test isolation
 - File permissions in tests use octal notation (0o755, 0o644)
 
