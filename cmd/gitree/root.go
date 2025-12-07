@@ -22,13 +22,12 @@ const (
 	defaultTimeout        = 10 * time.Second
 	defaultMaxConcurrent  = 50
 	spinnerDelay          = 100 * time.Millisecond
-	spinnerChar           = 11
+	spinnerCharSetIndex   = 11
 	defaultContextTimeout = 5 * time.Minute
 )
 
 //nolint:gochecknoglobals // CLI flags and root command
 var (
-	// Flags.
 	versionFlag       bool
 	noColorFlag       bool
 	allFlag           bool
@@ -156,7 +155,7 @@ func runGitree(_ *cobra.Command, args []string) error { //nolint:gocognit // Mai
 	}
 
 	// Initialize spinner
-	s := spinner.New(spinner.CharSets[spinnerChar], spinnerDelay)
+	s := spinner.New(spinner.CharSets[spinnerCharSetIndex], spinnerDelay)
 	s.Suffix = " Scanning repositories..."
 	s.Writer = os.Stderr
 	// Only start spinner if debug is disabled

@@ -7,6 +7,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/andreygrechin/gitree)](https://goreportcard.com/report/github.com/andreygrechin/gitree)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/andreygrechin/gitree/badge)](https://scorecard.dev/viewer/?uri=github.com/andreygrechin/gitree)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/11496/badge)](https://www.bestpractices.dev/projects/11496)
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fandreygrechin%2Fgitree.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fandreygrechin%2Fgitree?ref=badge_shield)
 
 **gitree** is a CLI tool that recursively scans directories for Git repositories and displays them in a tree structure with inline status information.
