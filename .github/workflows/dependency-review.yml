@@ -5,7 +5,7 @@ on:
     paths:
       - 'go.mod'
       - 'go.sum'
-      - '.github/workflows/deps-review.yml'
+      - '.github/workflows/dependency-review.yml'
 
 permissions:
   contents: read
