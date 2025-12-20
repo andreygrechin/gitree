@@ -6,6 +6,6 @@ Only the latest version of the software is maintained. Please upgrade to the new
 
 ## Reporting a Vulnerability
 
-To report a security vulnerability, please use the private vulnerability reporting feature in the `Security` tab of this repository. Please describe the issue, the steps required to reproduce it, the affected versions, and any known mitigations.
+To report a security vulnerability, please use the private vulnerability reporting at <https://github.com/andreygrechin/gitree/security>. Please describe the issue, the steps required to reproduce it, the affected versions, and any known mitigations.
 
 This submission will be visible only to repository maintainers. If the issue is confirmed as a vulnerability, a Security Advisory will be opened. This project follows a 90-day disclosure timeline.
