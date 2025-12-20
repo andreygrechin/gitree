@@ -2,10 +2,10 @@
 
 ## Supported Versions
 
-Only the latest version of the software is maintained. Users may need to upgrade to the newest release to receive security updates and support. All releases are published at <https://github.com/andreygrechin/glreporter/releases>.
+Only the latest version of the software is maintained. Please upgrade to the newest release to receive security updates.
 
 ## Reporting a Vulnerability
 
-To report a security vulnerability, please use Private vulnerability reporting at <https://github.com/andreygrechin/glreporter/security/>. This submission will only be viewable by repository maintainers. You will be credited if the advisory is published.
+To report a security vulnerability, please use the private vulnerability reporting feature in the `Security` tab of this repository. Please describe the issue, the steps required to reproduce it, the affected versions, and any known mitigations.
 
-If the above options aren't suitable, create [a GitHub issue](https://github.com/andreygrechin/glreporter/gitree) with minimal details, avoiding sharing any sensitive information.
+This submission will be visible only to repository maintainers. If the issue is confirmed as a vulnerability, a Security Advisory will be opened. This project follows a 90-day disclosure timeline.
