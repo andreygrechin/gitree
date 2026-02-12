@@ -1,12 +1,12 @@
 module github.com/andreygrechin/gitree
 
-go 1.25.5
+go 1.25.7
 
 require (
 	github.com/briandowns/spinner v1.23.2
 	github.com/fatih/color v1.18.0
 	github.com/go-git/go-billy/v5 v5.7.0
-	github.com/go-git/go-git/v5 v5.16.4
+	github.com/go-git/go-git/v5 v5.16.5
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.11.1
 )
