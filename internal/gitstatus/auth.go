@@ -28,7 +28,7 @@ type gitCredentials struct {
 	Host     string
 	Path     string
 	Username string
-	Password string
+	Password string //#nosec G117 -- value obtained at runtime from `git credential fill`, not hardcoded in source
 }
 
 // isHTTPSURL returns true if the URL is an HTTPS URL requiring authentication.
