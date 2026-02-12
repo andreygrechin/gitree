@@ -9,10 +9,6 @@ on:
     - cron: '0 3 * * MON'
   push:
     branches: [main]
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - 'LICENSE'
   workflow_dispatch:
 
 # Declare default permissions as read only.
