@@ -11,7 +11,7 @@ import (
 	"github.com/andreygrechin/gitree/internal/cli"
 	"github.com/andreygrechin/gitree/internal/gitstatus"
 	"github.com/andreygrechin/gitree/internal/models"
-	"github.com/andreygrechin/gitree/internal/scanner"
+	"github.com/andreygrechin/gitree/internal/reposcan"
 	"github.com/andreygrechin/gitree/internal/tree"
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
@@ -168,11 +168,11 @@ func runGitree(_ *cobra.Command, args []string) error { //nolint:gocognit // Mai
 	defer cancel()
 
 	// Scan for repositories
-	scanOpts := scanner.ScanOptions{
+	scanOpts := reposcan.ScanOptions{
 		RootPath: targetDir,
 		Debug:    debugFlag,
 	}
-	scanResult, err := scanner.Scan(ctx, scanOpts)
+	scanResult, err := reposcan.Scan(ctx, scanOpts)
 	if err != nil {
 		if !debugFlag {
 			s.Stop()
