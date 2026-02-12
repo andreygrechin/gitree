@@ -417,7 +417,7 @@ func readGitignoreFile(path string) ([]gitignore.Pattern, error) {
 		return nil, fmt.Errorf("%w: %s", errGitignorePathNotAbsolute, path)
 	}
 
-	f, err := os.Open(cleanPath)
+	f, err := os.Open(cleanPath) //#nosec G703 -- path is cleaned and validated as absolute above
 	if err != nil {
 		return nil, err
 	}
