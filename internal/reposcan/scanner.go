@@ -1,6 +1,6 @@
 //go:build !windows
 
-package scanner
+package reposcan
 
 import (
 	"context"
