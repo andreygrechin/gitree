@@ -28,7 +28,7 @@ type gitCredentials struct {
 	Host     string
 	Path     string
 	Username string
-	Password string
+	Password string //#nosec G117 -- internal struct, not serialized or exported
 }
 
 // isHTTPSURL returns true if the URL is an HTTPS URL requiring authentication.
