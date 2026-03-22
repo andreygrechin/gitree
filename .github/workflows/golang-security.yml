@@ -2,14 +2,37 @@
 name: golang-security
 
 on:
-  schedule:
-    - cron: 45 21 * * FRI
+  workflow_call:
+    inputs:
+      go-version:
+        description: Go version for security checks
+        required: false
+        type: string
+        default: "1.25.8"
 
 permissions: {}
 
 jobs:
   golang-security:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: read
-    uses: andreygrechin/github-actions/.github/workflows/golang-security.yml@2920bcbd41f31201daaf7b42868cfc348e5a3de2 # v1.2.0
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+
+      - name: Set up Go
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version: ${{ inputs.go-version }}
+          cache: true
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run govulncheck
+        run: |
+          go install golang.org/x/vuln/cmd/govulncheck@v1.1.4
+          govulncheck ./...
