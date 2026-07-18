@@ -1,6 +1,6 @@
 module github.com/andreygrechin/gitree
 
-go 1.25.8
+go 1.25.12
 
 require (
 	github.com/briandowns/spinner v1.23.2
